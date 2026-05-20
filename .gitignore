@@ -5,8 +5,10 @@
 .Trashes
 __MACOSX/
 
-# Old config backup
+# Old config backups
 oldConfig.plist
+config.plist.bak*
+config-verbose.plist
 
 # Temp files
 *.tmp
