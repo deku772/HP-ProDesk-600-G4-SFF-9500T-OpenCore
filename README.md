@@ -1,36 +1,3 @@
----
-AIGC:
-  ContentProducer: '001191110102MAD55U9H0F10002'
-  ContentPropagator: '001191110102MAD55U9H0F10002'
-  Label: '1'
-  ProduceID: '2adc97dc-7045-451f-82f5-15e4af4100cd'
-  PropagateID: '2adc97dc-7045-451f-82f5-15e4af4100cd'
-  ReservedCode1: 'e7bc8002-73df-4b77-9e7e-3c352377bb3d'
-  ReservedCode2: 'e7bc8002-73df-4b77-9e7e-3c352377bb3d'
----
-
----
-AIGC:
-  ContentProducer: '001191110102MAD55U9H0F10002'
-  ContentPropagator: '001191110102MAD55U9H0F10002'
-  Label: '1'
-  ProduceID: '1717f695-1bc7-4650-8c74-08fd9b5e0a32'
-  PropagateID: '1717f695-1bc7-4650-8c74-08fd9b5e0a32'
-  ReservedCode1: '879f89e9-3c06-4e8f-b435-84dad748bf3c'
-  ReservedCode2: '879f89e9-3c06-4e8f-b435-84dad748bf3c'
----
-
----
-AIGC:
-  ContentProducer: '001191110102MAD55U9H0F10002'
-  ContentPropagator: '001191110102MAD55U9H0F10002'
-  Label: '1'
-  ProduceID: '3e2bb14e-b693-4e75-826e-d4b26095ccaf'
-  PropagateID: '3e2bb14e-b693-4e75-826e-d4b26095ccaf'
-  ReservedCode1: 'cc3cd5a2-0532-4066-b478-da35c4a7c0cf'
-  ReservedCode2: 'cc3cd5a2-0532-4066-b478-da35c4a7c0cf'
----
-
 # HP ProDesk 600 G4 SFF - OpenCore EFI
 
 适用于 **惠普 ProDesk 600 G4 SFF**（i5-9500T）的 OpenCore EFI，运行 macOS Sequoia。
