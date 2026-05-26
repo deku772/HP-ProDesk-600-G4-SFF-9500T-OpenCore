@@ -1,3 +1,36 @@
+---
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: '2adc97dc-7045-451f-82f5-15e4af4100cd'
+  PropagateID: '2adc97dc-7045-451f-82f5-15e4af4100cd'
+  ReservedCode1: 'e7bc8002-73df-4b77-9e7e-3c352377bb3d'
+  ReservedCode2: 'e7bc8002-73df-4b77-9e7e-3c352377bb3d'
+---
+
+---
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: '1717f695-1bc7-4650-8c74-08fd9b5e0a32'
+  PropagateID: '1717f695-1bc7-4650-8c74-08fd9b5e0a32'
+  ReservedCode1: '879f89e9-3c06-4e8f-b435-84dad748bf3c'
+  ReservedCode2: '879f89e9-3c06-4e8f-b435-84dad748bf3c'
+---
+
+---
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: '3e2bb14e-b693-4e75-826e-d4b26095ccaf'
+  PropagateID: '3e2bb14e-b693-4e75-826e-d4b26095ccaf'
+  ReservedCode1: 'cc3cd5a2-0532-4066-b478-da35c4a7c0cf'
+  ReservedCode2: 'cc3cd5a2-0532-4066-b478-da35c4a7c0cf'
+---
+
 # HP ProDesk 600 G4 SFF - OpenCore EFI
 
 适用于 **惠普 ProDesk 600 G4 SFF**（i5-9500T）的 OpenCore EFI，运行 macOS Sequoia。
@@ -15,6 +48,16 @@
 | 硬盘 | 256GB NVMe SSD |
 | 网卡 | Intel I219（有线） |
 | WiFi/蓝牙 | Intel AX200（已更换，需 itlwm + IntelBluetoothFirmware） |
+
+## BIOS 设置
+
+使用本 EFI 前需在 BIOS 中完成以下设置：
+
+| 选项 | 路径 | 设置值 | 说明 |
+|---|---|---|---|
+| VT-d | Advanced → System Configuration → VT-d | **Disabled** | 已通过 DisableIoMapper 禁用，BIOS 也需关闭避免冲突 |
+| DVMT Pre-Allocated | Advanced → System Agent (SA) Configuration → DVMT Pre-Allocated | **64MB** | macOS 按 ig-platform-id 分配显存，设为 512MB 会导致内存映射错乱无法启动 |
+| Secure Boot | Boot → Secure Boot → Secure Boot | **Disabled** | OpenCore 不支持 UEFI Secure Boot，必须关闭 |
 
 ## OpenCore 版本
 
@@ -165,6 +208,16 @@ OpenCore EFI for **HP ProDesk 600 G4 SFF** with **Intel Core i5-9500T**, running
 | Storage | 256GB NVMe SSD |
 | Ethernet | Intel I219 |
 | WiFi/Bluetooth | Intel AX200 (aftermarket, requires itlwm + IntelBluetoothFirmware) |
+
+## BIOS Settings
+
+The following BIOS settings must be applied before using this EFI:
+
+| Option | Path | Value | Note |
+|---|---|---|---|
+| VT-d | Advanced → System Configuration → VT-d | **Disabled** | Also disabled via DisableIoMapper quirk; must be off in BIOS to avoid conflicts |
+| DVMT Pre-Allocated | Advanced → System Agent (SA) Configuration → DVMT Pre-Allocated | **64MB** | macOS allocates VRAM based on ig-platform-id, not BIOS DVMT. Setting 512MB causes memory map corruption and boot failure |
+| Secure Boot | Boot → Secure Boot → Secure Boot | **Disabled** | OpenCore does not support UEFI Secure Boot; must be disabled |
 
 ## OpenCore Version
 
