@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '9a01fe67-5bb7-42aa-9a1d-5b6d1fc9b41b'
-  PropagateID: '9a01fe67-5bb7-42aa-9a1d-5b6d1fc9b41b'
-  ReservedCode1: '35979314-5a91-49a7-8996-417df392b6d5'
-  ReservedCode2: '35979314-5a91-49a7-8996-417df392b6d5'
+  ProduceID: 'e66ccf90-fb62-4a59-b6e6-bd5a33e6b51d'
+  PropagateID: 'e66ccf90-fb62-4a59-b6e6-bd5a33e6b51d'
+  ReservedCode1: 'bd7b1c11-b8f1-4975-9902-dcbdd0af1eeb'
+  ReservedCode2: 'bd7b1c11-b8f1-4975-9902-dcbdd0af1eeb'
 ---
 
 # HP ProDesk 600 G4 SFF - OpenCore EFI
@@ -62,7 +62,7 @@ AIGC:
 ### 启动参数
 
 ```
-keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1
+keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall
 ```
 
 > 注：日常使用不跑马（无 `-v`）。如需调试，在 boot-args 末尾加 `-v` 即可。
@@ -73,6 +73,9 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 |---|---|---|
 | Lilu | 1.7.2 | 补丁引擎 |
 | BlueToolFixup | 2.7.0 | Sequoia 蓝牙框架修复 |
+| AMFIPass | 1.4.1 | 绕过 AMFI 以支持 OCLP 根补丁 |
+| IOSkywalkFamily | 1.0 | OCLP WiFi 所需框架 |
+| IO80211FamilyLegacy (含 AirPortBrcmNIC) | 1.0 | OCLP WiFi 传统驱动框架 |
 | VirtualSMC | 1.3.7 | SMC 仿真 |
 | WhateverGreen | 1.7.0 | 核显补丁 |
 | IntelMausiEthernet | 3.0.3 | Intel I219 有线网卡 |
@@ -232,7 +235,7 @@ The following BIOS settings must be applied before using this EFI:
 ### Boot Arguments
 
 ```
-keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1
+keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall
 ```
 
 > Note: No `-v` flag for daily use. Add `-v` to boot-args for verbose debugging.
@@ -243,6 +246,9 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 |---|---|---|
 | Lilu | 1.7.2 | Patch engine |
 | BlueToolFixup | 2.7.0 | Sequoia Bluetooth framework fix |
+| AMFIPass | 1.4.1 | Bypass AMFI for OCLP root patches |
+| IOSkywalkFamily | 1.0 | WiFi framework required by OCLP |
+| IO80211FamilyLegacy (includes AirPortBrcmNIC) | 1.0 | Legacy WiFi framework for OCLP |
 | VirtualSMC | 1.3.7 | SMC emulator |
 | WhateverGreen | 1.7.0 | iGPU patches |
 | IntelMausiEthernet | 3.0.3 | Intel I219 LAN |
