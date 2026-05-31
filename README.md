@@ -1,3 +1,91 @@
+---
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: 'a1264b4e-1805-4470-916f-4c1b75a10d77'
+  PropagateID: 'a1264b4e-1805-4470-916f-4c1b75a10d77'
+  ReservedCode1: '54f23d51-40f6-4b3b-90c2-5d240d227fad'
+  ReservedCode2: '54f23d51-40f6-4b3b-90c2-5d240d227fad'
+---
+
+---
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: '872fc850-2bab-4ad0-91ec-3d0152415a84'
+  PropagateID: '872fc850-2bab-4ad0-91ec-3d0152415a84'
+  ReservedCode1: '90127921-edaf-481e-a109-506c171ca059'
+  ReservedCode2: '90127921-edaf-481e-a109-506c171ca059'
+---
+
+---
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: '62109443-a5bb-45ce-93f2-1204c92726c8'
+  PropagateID: '62109443-a5bb-45ce-93f2-1204c92726c8'
+  ReservedCode1: 'c3205161-2426-4da0-b5e4-7872fcc3b9ea'
+  ReservedCode2: 'c3205161-2426-4da0-b5e4-7872fcc3b9ea'
+---
+
+---
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: 'aaeccb35-1291-43fe-be29-fe92754ded04'
+  PropagateID: 'aaeccb35-1291-43fe-be29-fe92754ded04'
+  ReservedCode1: 'bffe78f8-c2b2-4296-bd53-47b354f8d20b'
+  ReservedCode2: 'bffe78f8-c2b2-4296-bd53-47b354f8d20b'
+---
+
+---
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: 'b29d1eed-fba8-4ab9-977a-f2495cb539eb'
+  PropagateID: 'b29d1eed-fba8-4ab9-977a-f2495cb539eb'
+  ReservedCode1: 'c0a8ca81-a00d-41fa-9bf8-4e0c96dee8c2'
+  ReservedCode2: 'c0a8ca81-a00d-41fa-9bf8-4e0c96dee8c2'
+---
+
+---
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: 'c63f9043-7444-47c9-ad14-72234d43f550'
+  PropagateID: 'c63f9043-7444-47c9-ad14-72234d43f550'
+  ReservedCode1: '00f7f5b2-91c5-4cc8-ac7e-2533077a26b2'
+  ReservedCode2: '00f7f5b2-91c5-4cc8-ac7e-2533077a26b2'
+---
+
+---
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: 'b7ba35f9-bf20-433c-8b85-29ff14af6548'
+  PropagateID: 'b7ba35f9-bf20-433c-8b85-29ff14af6548'
+  ReservedCode1: 'd0d4c90e-99d3-4ba7-8046-ee2c6ef1894f'
+  ReservedCode2: 'd0d4c90e-99d3-4ba7-8046-ee2c6ef1894f'
+---
+
+---
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: 'cdb83658-b873-48f1-9efd-41c03d8ef25e'
+  PropagateID: 'cdb83658-b873-48f1-9efd-41c03d8ef25e'
+  ReservedCode1: '01785907-33de-4acb-9963-09409fef78d1'
+  ReservedCode2: '01785907-33de-4acb-9963-09409fef78d1'
+---
+
 # HP ProDesk 600 G4 SFF - OpenCore EFI
 
 适用于 **惠普 ProDesk 600 G4 SFF**（i5-9500T）的 OpenCore EFI，运行 macOS Sequoia。
@@ -14,7 +102,7 @@
 | 内存 | 16GB DDR4 2133MHz |
 | 硬盘 | 256GB NVMe SSD |
 | 网卡 | Intel I219（有线） |
-| WiFi/蓝牙 | Intel AX200（已更换，需 itlwm + IntelBluetoothFirmware） |
+| WiFi/蓝牙 | Broadcom BCM94360CS2（已更换，原生支持 + AirportBrcmFixup + BrcmPatchRAM3） |
 
 ## BIOS 设置
 
@@ -61,7 +149,9 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 | Kext | 版本 | 用途 |
 |---|---|---|
 | Lilu | 1.7.2 | 补丁引擎 |
-| BlueToolFixup | 2.7.0 | Sequoia 蓝牙框架修复 |
+| AirportBrcmFixup | 2.2.0 | Broadcom WiFi 补丁 |
+| BrcmFirmwareData | 2.7.2 | Broadcom BT 固件数据（BrcmPatchRAM3 依赖） |
+| BrcmPatchRAM3 | 2.7.2 | Broadcom BT 固件上传（macOS 12+） |
 | VirtualSMC | 1.3.7 | SMC 仿真 |
 | WhateverGreen | 1.7.0 | 核显补丁 |
 | IntelMausiEthernet | 3.0.3 | Intel I219 有线网卡 |
@@ -72,6 +162,8 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 | RestrictEvents | 1.1.6 | 系统更新修正 |
 | USBToolBox | 1.1.1 | USB 端口映射工具 |
 | UTBMap | 1.1 | USB 端口映射数据（本机定制） |
+
+> 注：BlueToolFixup 已禁用，仅用于 Intel 蓝牙；BCM94360CS2 使用 BrcmPatchRAM3 替代。
 
 ### Booter Quirks
 
@@ -113,6 +205,8 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 - ✅ macOS Sequoia 启动和安装
 - ✅ Intel UHD 630 显示输出（DisplayPort）
 - ✅ Intel I219 有线网卡
+- ✅ WiFi（Broadcom BCM94360CS2，AirportBrcmFixup）
+- ✅ 蓝牙（Broadcom BCM94360CS2，BrcmPatchRAM3）
 - ✅ USB 端口（已用 USBToolBox 定制映射）
 - ✅ 声卡（layout-id 23）
 - ✅ CPU 电源管理
@@ -122,7 +216,6 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 ## 待完善
 
 - **iCloud / iMessage**：需要用 GenSMBIOS 为 Macmini8,1 生成并验证唯一序列号（见下方说明）
-- **WiFi/蓝牙**：本机已更换 Intel AX200 网卡，如需使用需额外添加 itlwm + IntelBluetoothFirmware 等 kext
 
 ## 序列号验证方法
 
@@ -174,7 +267,7 @@ OpenCore EFI for **HP ProDesk 600 G4 SFF** with **Intel Core i5-9500T**, running
 | RAM | 16GB DDR4 2133MHz |
 | Storage | 256GB NVMe SSD |
 | Ethernet | Intel I219 |
-| WiFi/Bluetooth | Intel AX200 (aftermarket, requires itlwm + IntelBluetoothFirmware) |
+| WiFi/Bluetooth | Broadcom BCM94360CS2 (aftermarket, native support + AirportBrcmFixup + BrcmPatchRAM3) |
 
 ## BIOS Settings
 
@@ -221,7 +314,9 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 | Kext | Version | Purpose |
 |---|---|---|
 | Lilu | 1.7.2 | Patch engine |
-| BlueToolFixup | 2.7.0 | Sequoia Bluetooth framework fix |
+| AirportBrcmFixup | 2.2.0 | Broadcom WiFi patches |
+| BrcmFirmwareData | 2.7.2 | Broadcom BT firmware data (required by BrcmPatchRAM3) |
+| BrcmPatchRAM3 | 2.7.2 | Broadcom BT firmware upload for macOS 12+ |
 | VirtualSMC | 1.3.7 | SMC emulator |
 | WhateverGreen | 1.7.0 | iGPU patches |
 | IntelMausiEthernet | 3.0.3 | Intel I219 LAN |
@@ -232,6 +327,8 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 | RestrictEvents | 1.1.6 | System update fix |
 | USBToolBox | 1.1.1 | USB port mapping tool |
 | UTBMap | 1.1 | USB port mapping data (custom for this machine) |
+
+> Note: BlueToolFixup is disabled (Intel BT only); BCM94360CS2 uses BrcmPatchRAM3 instead.
 
 ### Booter Quirks
 
@@ -273,6 +370,8 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 - ✅ macOS Sequoia boot and installation
 - ✅ Intel UHD 630 display output (DisplayPort)
 - ✅ Intel I219 Ethernet
+- ✅ WiFi (Broadcom BCM94360CS2, AirportBrcmFixup)
+- ✅ Bluetooth (Broadcom BCM94360CS2, BrcmPatchRAM3)
 - ✅ USB ports (custom mapped with USBToolBox)
 - ✅ Audio (layout-id 23)
 - ✅ CPU power management
@@ -282,7 +381,6 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 ## What Needs Work
 
 - **iCloud / iMessage**: Need to generate and verify unique SMBIOS serials with GenSMBIOS (see below)
-- **WiFi/Bluetooth**: Intel AX200 installed but requires additional kexts (itlwm, IntelBluetoothFirmware)
 
 ## Serial Number Verification
 
