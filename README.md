@@ -148,6 +148,14 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 5. 如果显示某台 Mac 的保修信息 → ❌ 不可用，重新生成
 6. 将验证通过的序列号替换到 config.plist 的 `SystemSerialNumber`、`MLB`、`SystemUUID` 三处
 
+## 更新日志
+
+### 2026-07-09
+- **修复 NVMe 导致异常死机的 bug**：禁用了 `FixupAppleEfiImages` 和移除了 `ClearTaskSwitchBit` 这两个 Booter Quirk，解决了部分 NVMe 固态硬盘在 macOS 下随机死机的问题。
+- 新增 `AMFIPass.kext`（绕过签名验证）
+- 新增 `BlueToolFixup.kext`、`IO80211FamilyLegacy.kext`、`IOSkywalkFamily.kext`（WiFi/蓝牙兼容）
+- IntelMausiEthernet 升级至 v3.0.3
+
 ## 注意事项
 
 1. **SMBIOS 序列号**：当前配置中的序列号未经验证，使用 iCloud/iMessage 前必须自行生成并验证（见上方）。
@@ -320,6 +328,14 @@ The serials in this config are randomly generated. **You MUST verify uniqueness 
 4. If it shows **"Invalid serial" or "Purchase date not verified"** → ✅ Safe to use (no conflict with real Mac)
 5. If it shows warranty info for a Mac → ❌ Conflict, regenerate
 6. Replace `SystemSerialNumber`, `MLB`, and `SystemUUID` in config.plist with verified serials
+
+## Changelog
+
+### 2026-07-09
+- **Fixed NVMe crash bug**: Disabled `FixupAppleEfiImages` and removed `ClearTaskSwitchBit` booter quirks — resolved random kernel panics/deadlocks caused by certain NVMe SSDs on macOS.
+- Added `AMFIPass.kext` (signature bypass)
+- Added `BlueToolFixup.kext`, `IO80211FamilyLegacy.kext`, `IOSkywalkFamily.kext` (WiFi/Bluetooth compatibility)
+- Updated IntelMausiEthernet to v3.0.3
 
 ## Important Notes
 
