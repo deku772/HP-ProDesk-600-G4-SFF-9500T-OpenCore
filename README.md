@@ -58,23 +58,18 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 
 ### 启用的 Kext
 
-| Kext | 版本 | 用途 |
-|---|---|---|
-| Lilu | 1.7.2 | 补丁引擎 |
-| BlueToolFixup | 2.7.0 | Sequoia 蓝牙框架修复 |
-| AMFIPass | 1.4.1 | 绕过 AMFI 以支持 OCLP 根补丁 |
-| IOSkywalkFamily | 1.0 | OCLP WiFi 所需框架 |
-| IO80211FamilyLegacy (含 AirPortBrcmNIC) | 1.0 | OCLP WiFi 传统驱动框架 |
-| VirtualSMC | 1.3.7 | SMC 仿真 |
-| WhateverGreen | 1.7.0 | 核显补丁 |
-| IntelMausiEthernet | 3.0.3 | Intel I219 有线网卡 |
-| AppleALC | 1.9.7 | 声卡驱动 |
-| SMCProcessor | 1.3.7 | CPU 温度监控 |
-| SMCSuperIO | 1.3.7 | 风扇转速监控 |
-| NVMeFix | 1.1.3 | NVMe 电源管理 |
-| RestrictEvents | 1.1.6 | 系统更新修正 |
-| USBToolBox | 1.1.1 | USB 端口映射工具 |
-| UTBMap | 1.1 | USB 端口映射数据（本机定制） |
+|| Kext | 版本 | 用途 |
+||---|---|---|
+|| Lilu | 1.7.2 | 补丁引擎 |
+|| VirtualSMC | 1.3.7 | SMC 仿真 |
+|| WhateverGreen | 1.7.0 | 核显补丁 |
+|| IntelMausiEthernet | 3.0.3 | Intel I219 有线网卡 |
+|| AppleALC | 1.9.7 | 声卡驱动 |
+|| SMCProcessor | 1.3.7 | CPU 温度监控 |
+|| SMCSuperIO | 1.3.7 | 风扇转速监控 |
+|| RestrictEvents | 1.1.6 | 系统更新修正 |
+|| USBToolBox | 1.1.1 | USB 端口映射工具 |
+|| UTBMap | 1.1 | USB 端口映射数据（本机定制） |
 
 ### Booter Quirks
 
@@ -83,7 +78,6 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 - `EnableWriteUnprotector=false`
 - `DevirtualiseMmio=true`
 - `ProtectUefiServices=true`
-- `FixupAppleEfiImages=true`
 - `AvoidRuntimeDefrag=true`
 - `ProvideCustomSlide=true`
 
@@ -151,9 +145,9 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 ## 更新日志
 
 ### 2026-07-09
-- **修复 NVMe 导致异常死机的 bug**：禁用了 `FixupAppleEfiImages` 和移除了 `ClearTaskSwitchBit` 这两个 Booter Quirk，解决了部分 NVMe 固态硬盘在 macOS 下随机死机的问题。
-- 新增 `AMFIPass.kext`（绕过签名验证）
-- 新增 `BlueToolFixup.kext`、`IO80211FamilyLegacy.kext`、`IOSkywalkFamily.kext`（WiFi/蓝牙兼容）
+- **修复 NVMe 死机**：禁用了 `FixupAppleEfiImages` Booter Quirk，移除了 `ClearTaskSwitchBit`，解决部分 NVMe SSD 随机死机问题。
+- **移除 OCLP 相关 kext**：本机无 BCM94360CS2 无线网卡，禁用并移除了 BlueToolFixup、AMFIPass、IOSkywalkFamily、IO80211FamilyLegacy。
+- **移除 NVMeFix.kext**：不再需要。
 - IntelMausiEthernet 升级至 v3.0.3
 
 ## 注意事项
@@ -239,23 +233,18 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 
 ### Enabled Kexts
 
-| Kext | Version | Purpose |
-|---|---|---|
-| Lilu | 1.7.2 | Patch engine |
-| BlueToolFixup | 2.7.0 | Sequoia Bluetooth framework fix |
-| AMFIPass | 1.4.1 | Bypass AMFI for OCLP root patches |
-| IOSkywalkFamily | 1.0 | WiFi framework required by OCLP |
-| IO80211FamilyLegacy (includes AirPortBrcmNIC) | 1.0 | Legacy WiFi framework for OCLP |
-| VirtualSMC | 1.3.7 | SMC emulator |
-| WhateverGreen | 1.7.0 | iGPU patches |
-| IntelMausiEthernet | 3.0.3 | Intel I219 LAN |
-| AppleALC | 1.9.7 | Audio |
-| SMCProcessor | 1.3.7 | CPU temp monitoring |
-| SMCSuperIO | 1.3.7 | Fan speed monitoring |
-| NVMeFix | 1.1.3 | NVMe power management |
-| RestrictEvents | 1.1.6 | System update fix |
-| USBToolBox | 1.1.1 | USB port mapping tool |
-| UTBMap | 1.1 | USB port mapping data (custom for this machine) |
+|| Kext | Version | Purpose |
+||---|---|---|
+|| Lilu | 1.7.2 | Patch engine |
+|| VirtualSMC | 1.3.7 | SMC emulator |
+|| WhateverGreen | 1.7.0 | iGPU patches |
+|| IntelMausiEthernet | 3.0.3 | Intel I219 LAN |
+|| AppleALC | 1.9.7 | Audio |
+|| SMCProcessor | 1.3.7 | CPU temp monitoring |
+|| SMCSuperIO | 1.3.7 | Fan speed monitoring |
+|| RestrictEvents | 1.1.6 | System update fix |
+|| USBToolBOX | 1.1.1 | USB port mapping tool |
+|| UTBMap | 1.1 | USB port mapping data (custom for this machine) |
 
 ### Booter Quirks
 
@@ -264,7 +253,6 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 - `EnableWriteUnprotector=false`
 - `DevirtualiseMmio=true`
 - `ProtectUefiServices=true`
-- `FixupAppleEfiImages=true`
 - `AvoidRuntimeDefrag=true`
 - `ProvideCustomSlide=true`
 
@@ -332,9 +320,9 @@ The serials in this config are randomly generated. **You MUST verify uniqueness 
 ## Changelog
 
 ### 2026-07-09
-- **Fixed NVMe crash bug**: Disabled `FixupAppleEfiImages` and removed `ClearTaskSwitchBit` booter quirks — resolved random kernel panics/deadlocks caused by certain NVMe SSDs on macOS.
-- Added `AMFIPass.kext` (signature bypass)
-- Added `BlueToolFixup.kext`, `IO80211FamilyLegacy.kext`, `IOSkywalkFamily.kext` (WiFi/Bluetooth compatibility)
+- **Fixed NVMe crash**: Disabled `FixupAppleEfiImages` booter quirk — resolved random kernel panics/deadlocks on certain NVMe SSDs.
+- **Removed OCLP kexts**: Disabled BlueToolFixup, AMFIPass, IOSkywalkFamily, IO80211FamilyLegacy (not needed, no BCM94360CS2 card).
+- **Removed NVMeFix.kext**.
 - Updated IntelMausiEthernet to v3.0.3
 
 ## Important Notes
