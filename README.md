@@ -1,3 +1,14 @@
+---
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: '19ca4c08-9bcd-47f4-8e98-4e779d004427'
+  PropagateID: '19ca4c08-9bcd-47f4-8e98-4e779d004427'
+  ReservedCode1: '0ae13d64-94b6-4719-b350-256334ba19ce'
+  ReservedCode2: '0ae13d64-94b6-4719-b350-256334ba19ce'
+---
+
 # HP ProDesk 600 G4 SFF - OpenCore EFI
 
 适用于 **惠普 ProDesk 600 G4 SFF**（i5-9500T）的 OpenCore EFI，运行 macOS Sequoia。
@@ -14,17 +25,7 @@
 | 内存 | 16GB DDR4 2133MHz |
 | 硬盘 | 256GB NVMe SSD |
 | 网卡 | Intel I219（有线） |
-| WiFi/蓝牙 | Broadcom BCM94360CS2（已更换，需 OCLP 修补） |
-
-## BIOS 设置
-
-使用本 EFI 前需在 BIOS 中完成以下设置：
-
-| 选项 | 路径 | 设置值 | 说明 |
-|---|---|---|---|
-| VT-d | Advanced → System Configuration → VT-d | **Disabled** | 已通过 DisableIoMapper 禁用，BIOS 也需关闭避免冲突 |
-| DVMT Pre-Allocated | Advanced → System Agent (SA) Configuration → DVMT Pre-Allocated | **64MB** | macOS 按 ig-platform-id 分配显存，设为 512MB 会导致内存映射错乱无法启动 |
-| Secure Boot | Boot → Secure Boot → Secure Boot | **Disabled** | OpenCore 不支持 UEFI Secure Boot，必须关闭 |
+| WiFi/蓝牙 | 无 |
 
 ## OpenCore 版本
 
@@ -32,13 +33,11 @@
 
 ## macOS 兼容性
 
-- macOS Sequoia 15.5.7（已测试）
+- macOS Sequoia（已测试）
 
 ## SMBIOS
 
 `Macmini8,1`，配合 `CustomSMBIOSGuid=true` + `revpatch=sbvmm`
-
-> ⚠️ 配置中的序列号为随机生成，使用 iCloud/iMessage 前必须自行生成并验证唯一性（见下方说明）。
 
 ## 关键配置
 
@@ -51,35 +50,40 @@
 ### 启动参数
 
 ```
-keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall
+keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 -v
 ```
-
-> 注：日常使用不跑马（无 `-v`）。如需调试，在 boot-args 末尾加 `-v` 即可。
 
 ### 启用的 Kext
 
-|| Kext | 版本 | 用途 |
-||---|---|---|
-|| Lilu | 1.7.2 | 补丁引擎 |
-|| VirtualSMC | 1.3.7 | SMC 仿真 |
-|| WhateverGreen | 1.7.0 | 核显补丁 |
-|| IntelMausiEthernet | 3.0.3 | Intel I219 有线网卡 |
-|| AppleALC | 1.9.7 | 声卡驱动 |
-|| SMCProcessor | 1.3.7 | CPU 温度监控 |
-|| SMCSuperIO | 1.3.7 | 风扇转速监控 |
-|| RestrictEvents | 1.1.6 | 系统更新修正 |
-|| USBToolBox | 1.1.1 | USB 端口映射工具 |
-|| UTBMap | 1.1 | USB 端口映射数据（本机定制） |
+| Kext | 版本 | 用途 |
+|---|---|---|
+| Lilu | 1.7.2 | 补丁引擎 |
+| VirtualSMC | 1.3.7 | SMC 仿真 |
+| WhateverGreen | 1.7.0 | 核显补丁 |
+| IntelMausiEthernet | 3.0.0 | Intel I219 有线网卡 |
+| AppleALC | 1.9.7 | 声卡驱动 |
+| SMCProcessor | 1.3.7 | CPU 温度监控 |
+| SMCSuperIO | 1.3.7 | 风扇转速监控 |
+| NVMeFix | 1.1.3 | NVMe 电源管理 |
+| RestrictEvents | 1.1.6 | 系统更新修正 |
+| USBPorts | 1.0 | USB 端口映射 |
+
+### 已禁用的 Kext（本机无对应硬件）
+
+itlwm、AirPortUtility、BlueToolFixup、IntelBluetoothFirmware、IntelBTPatcher、BluetoothFileExchange、FeatureUnlock
+
+### ACPI 补丁（13 个 SSDT）
+
+SSDT-TPM-Off、SSDT-AWAC-HPET-RTC、SSDT-PLUG、SSDT-PMCR、SSDT-PPMC、SSDT-MCHC、SSDT-XOSI、SSDT-XSPI、SSDT-DMAC、SSDT-USBX、SSDT-EC、SSDT-WAK、SSDT-PTS
 
 ### Booter Quirks
 
 - `RebuildAppleMemoryMap=true`
-- `SetupVirtualMap=false`（HP OEM 主板必须为 false）
+- `SetupVirtualMap=true`
 - `EnableWriteUnprotector=false`
 - `DevirtualiseMmio=true`
 - `ProtectUefiServices=true`
-- `AvoidRuntimeDefrag=true`
-- `ProvideCustomSlide=true`
+- `FixupAppleEfiImages=true`
 
 ### Kernel Quirks
 
@@ -90,12 +94,6 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 - `DisableLinkeditJettison=true`
 - `DisableRtcChecksum=true`
 - `LapicKernelPanic=true`
-- `PanicNoKextDump=true`
-- `PowerTimeoutKernelPanic=true`
-
-### 已禁用的 Booter Patch
-
-- **Skip Board ID check**：已禁用。OTA 升级后二进制偏移量变化会导致匹配失败卡死。
 
 ### UEFI 驱动
 
@@ -107,71 +105,36 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 
 ## 正常工作的功能
 
-- ✅ macOS Sequoia 启动和安装
-- ✅ Intel UHD 630 显示输出（DisplayPort）
-- ✅ Intel I219 有线网卡
-- ✅ USB 端口（已用 USBToolBox 定制映射）
-- ✅ 声卡（layout-id 23）
-- ✅ CPU 电源管理
-- ✅ NVMe 电源管理
-- ✅ 从 15.5.5 OTA 升级到 15.5.7
+- macOS Sequoia 启动和安装
+- Intel UHD 630 显示输出（DisplayPort）
+- Intel I219 有线网卡
+- USB 端口（部分可用，需定制映射）
+- 声卡（可能需要调整 layout-id）
+- CPU 电源管理
 
 ## 待完善
 
-- **iCloud / iMessage**：需要用 GenSMBIOS 为 Macmini8,1 生成并验证唯一序列号（见下方说明）
-- **WiFi/蓝牙（BCM94360CS2）**：需使用 OCLP (OpenCore Legacy Patcher) 进行根补丁。macOS Sequoia 已移除 AirPortBrcm4360 驱动，单纯添加 kext 无法工作。
-
-### BCM94360CS2 WiFi/蓝牙启用方法
-
-1. 正常启动进入 macOS
-2. 下载 [OCLP](https://github.com/dortania/OpenCore-Legacy-Patcher/releases)
-3. 打开 OCLP → Post-Install Root Patch → 选择 Broadcom WiFi 补丁
-4. 应用补丁并重启
-5. WiFi 和蓝牙应该可以正常工作
-
-> ⚠️ OCLP 根补丁会在系统更新后被覆盖，每次大版本更新后需要重新打补丁。
-
-## 序列号验证方法
-
-配置中的序列号为随机生成，**必须验证唯一性后才能使用 iCloud/iMessage**：
-
-1. 用 [GenSMBIOS](https://github.com/corpnewt/GenSMBIOS) 为 `Macmini8,1` 生成序列号（Serial + MLB + UUID）
-2. 打开 Apple 保修查询页面：https://checkcoverage.apple.com
-3. 输入生成的 Serial Number
-4. 如果显示 **"无效序列号" 或 "购买日期未验证"** → ✅ 可用（没有和真机冲突）
-5. 如果显示某台 Mac 的保修信息 → ❌ 不可用，重新生成
-6. 将验证通过的序列号替换到 config.plist 的 `SystemSerialNumber`、`MLB`、`SystemUUID` 三处
-
-## 更新日志
-
-### 2026-07-09
-- **修复 NVMe 死机**：禁用了 `FixupAppleEfiImages` Booter Quirk，移除了 `ClearTaskSwitchBit`，解决部分 NVMe SSD 随机死机问题。
-- **移除 OCLP 相关 kext**：本机无 BCM94360CS2 无线网卡，禁用并移除了 BlueToolFixup、AMFIPass、IOSkywalkFamily、IO80211FamilyLegacy。
-- **移除 NVMeFix.kext**：不再需要。
-- IntelMausiEthernet 升级至 v3.0.3
+- **USB 端口映射**：当前使用的是 HP 400 G5 Mini 的映射文件，需要用 USBToolBox 在本机上重新生成
+- **声卡 layout-id**：当前设为 23，可能需要根据实际 ALC 编解码器调整
+- **iCloud / iMessage**：需要用 GenSMBIOS 为 Macmini8,1 生成唯一的序列号
 
 ## 注意事项
 
-1. **SMBIOS 序列号**：当前配置中的序列号未经验证，使用 iCloud/iMessage 前必须自行生成并验证（见上方）。
+1. **SMBIOS 序列号**：配置中的序列号为占位符，使用 iCloud/iMessage 前必须用 [GenSMBIOS](https://github.com/corpnewt/GenSMBIOS) 为 Macmini8,1 生成你自己的序列号。
 
-2. **USB 映射**：已使用 USBToolBox 在本机生成定制映射（UTBMap.kext），如更换硬件需重新生成。
+2. **USB 映射**：在 macOS 下使用 [USBToolBox](https://github.com/USBToolBox/tool) 生成本机专属端口映射，替换 `USBPorts.kext`。
 
 3. **DisplayPort 端口**：本机背面有 2 个 DP 口。当前帧缓冲补丁映射了 3 个 DP 连接器。如果只有一个口有信号，需调整 framebuffer busid 值。
 
-4. **Skip Board ID check**：此 Booter Patch 已禁用。如果未来 macOS 更新需要重新启用，需用 OpenCore 对应版本重新计算偏移量。
+4. **调试日志**：OpenCore 日志保存在 macOS 分区的 `/var/log/OpenCore.log`。
 
-5. **SetupVirtualMap**：HP OEM 主板必须保持 `false`，设为 `true` 会导致无法启动。
-
-6. **编辑 config.plist**：**不要用 Python plistlib 编辑**，它会破坏 XML plist 格式导致无限重启。请用纯文本编辑器或 ProperTree。
-
-7. **从 U 盘迁移到硬盘**：复制 EFI 到硬盘 EFI 分区后，需在 BIOS 中将硬盘启动项设为第一优先级。确保复制完整，特别是 `.kext/Contents/MacOS/` 下的可执行文件不能遗漏。
+5. **从 U 盘迁移到硬盘**：复制 EFI 到硬盘 EFI 分区后，需在 BIOS 中将硬盘启动项设为第一优先级。确保复制完整，特别是 `.kext/Contents/MacOS/` 下的可执行文件不能遗漏。
 
 ## 致谢
 
 - [Acidanthera](https://github.com/acidanthera) - OpenCore、Lilu、VirtualSMC、WhateverGreen、AppleALC 等
 - [Mieze](https://github.com/Mieze) - IntelMausiEthernet
-- [USBToolBox](https://github.com/USBToolBox/tool) - USB 端口映射工具
-- [Dortania](https://dortania.github.io) - OpenCore 安装指南、OCLP
+- [Dortania](https://dortania.github.io) - OpenCore 安装指南
 
 ---
 
@@ -189,17 +152,7 @@ OpenCore EFI for **HP ProDesk 600 G4 SFF** with **Intel Core i5-9500T**, running
 | RAM | 16GB DDR4 2133MHz |
 | Storage | 256GB NVMe SSD |
 | Ethernet | Intel I219 |
-| WiFi/Bluetooth | Broadcom BCM94360CS2 (aftermarket, requires OCLP root patch) |
-
-## BIOS Settings
-
-The following BIOS settings must be applied before using this EFI:
-
-| Option | Path | Value | Note |
-|---|---|---|---|
-| VT-d | Advanced → System Configuration → VT-d | **Disabled** | Also disabled via DisableIoMapper quirk; must be off in BIOS to avoid conflicts |
-| DVMT Pre-Allocated | Advanced → System Agent (SA) Configuration → DVMT Pre-Allocated | **64MB** | macOS allocates VRAM based on ig-platform-id, not BIOS DVMT. Setting 512MB causes memory map corruption and boot failure |
-| Secure Boot | Boot → Secure Boot → Secure Boot | **Disabled** | OpenCore does not support UEFI Secure Boot; must be disabled |
+| WiFi/Bluetooth | None |
 
 ## OpenCore Version
 
@@ -207,13 +160,7 @@ The following BIOS settings must be applied before using this EFI:
 
 ## macOS Compatibility
 
-- macOS Sequoia 15.5.7 (tested)
-
-## SMBIOS
-
-`Macmini8,1` with `CustomSMBIOSGuid=true` + `revpatch=sbvmm`
-
-> ⚠️ Serial numbers in this config are randomly generated. You MUST generate and verify unique serials before using iCloud/iMessage (see below).
+- macOS Sequoia (tested)
 
 ## Key Configuration
 
@@ -226,35 +173,40 @@ The following BIOS settings must be applied before using this EFI:
 ### Boot Arguments
 
 ```
-keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall
+keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 -v
 ```
-
-> Note: No `-v` flag for daily use. Add `-v` to boot-args for verbose debugging.
 
 ### Enabled Kexts
 
-|| Kext | Version | Purpose |
-||---|---|---|
-|| Lilu | 1.7.2 | Patch engine |
-|| VirtualSMC | 1.3.7 | SMC emulator |
-|| WhateverGreen | 1.7.0 | iGPU patches |
-|| IntelMausiEthernet | 3.0.3 | Intel I219 LAN |
-|| AppleALC | 1.9.7 | Audio |
-|| SMCProcessor | 1.3.7 | CPU temp monitoring |
-|| SMCSuperIO | 1.3.7 | Fan speed monitoring |
-|| RestrictEvents | 1.1.6 | System update fix |
-|| USBToolBOX | 1.1.1 | USB port mapping tool |
-|| UTBMap | 1.1 | USB port mapping data (custom for this machine) |
+| Kext | Version | Purpose |
+|---|---|---|
+| Lilu | 1.7.2 | Patch engine |
+| VirtualSMC | 1.3.7 | SMC emulator |
+| WhateverGreen | 1.7.0 | iGPU patches |
+| IntelMausiEthernet | 3.0.0 | Intel I219 LAN |
+| AppleALC | 1.9.7 | Audio |
+| SMCProcessor | 1.3.7 | CPU temp monitoring |
+| SMCSuperIO | 1.3.7 | Fan speed monitoring |
+| NVMeFix | 1.1.3 | NVMe power management |
+| RestrictEvents | 1.1.6 | System update fix |
+| USBPorts | 1.0 | USB port mapping |
+
+### Disabled Kexts (no hardware)
+
+itlwm, AirPortUtility, BlueToolFixup, IntelBluetoothFirmware, IntelBTPatcher, BluetoothFileExchange, FeatureUnlock
+
+### ACPI (13 SSDTs)
+
+SSDT-TPM-Off, SSDT-AWAC-HPET-RTC, SSDT-PLUG, SSDT-PMCR, SSDT-PPMC, SSDT-MCHC, SSDT-XOSI, SSDT-XSPI, SSDT-DMAC, SSDT-USBX, SSDT-EC, SSDT-WAK, SSDT-PTS
 
 ### Booter Quirks
 
 - `RebuildAppleMemoryMap=true`
-- `SetupVirtualMap=false` (HP OEM board requires false)
+- `SetupVirtualMap=true`
 - `EnableWriteUnprotector=false`
 - `DevirtualiseMmio=true`
 - `ProtectUefiServices=true`
-- `AvoidRuntimeDefrag=true`
-- `ProvideCustomSlide=true`
+- `FixupAppleEfiImages=true`
 
 ### Kernel Quirks
 
@@ -265,12 +217,6 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 - `DisableLinkeditJettison=true`
 - `DisableRtcChecksum=true`
 - `LapicKernelPanic=true`
-- `PanicNoKextDump=true`
-- `PowerTimeoutKernelPanic=true`
-
-### Disabled Booter Patch
-
-- **Skip Board ID check**: Disabled. Binary offset changes after OTA updates can cause boot hang.
 
 ### UEFI Drivers
 
@@ -282,68 +228,33 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 
 ## What Works
 
-- ✅ macOS Sequoia boot and installation
-- ✅ Intel UHD 630 display output (DisplayPort)
-- ✅ Intel I219 Ethernet
-- ✅ USB ports (custom mapped with USBToolBox)
-- ✅ Audio (layout-id 23)
-- ✅ CPU power management
-- ✅ NVMe power management
-- ✅ OTA upgrade from 15.5.5 to 15.5.7
+- macOS Sequoia boot and installation
+- Intel UHD 630 display output (DisplayPort)
+- Intel I219 Ethernet
+- USB ports (partial, needs custom mapping)
+- Audio (may need layout-id adjustment)
+- CPU power management
 
 ## What Needs Work
 
-- **iCloud / iMessage**: Need to generate and verify unique SMBIOS serials with GenSMBIOS (see below)
-- **WiFi/Bluetooth (BCM94360CS2)**: Requires OCLP (OpenCore Legacy Patcher) root patch. macOS Sequoia removed the AirPortBrcm4360 driver; simply adding kexts will not work.
-
-### Enabling BCM94360CS2 WiFi/Bluetooth
-
-1. Boot into macOS normally
-2. Download [OCLP](https://github.com/dortania/OpenCore-Legacy-Patcher/releases)
-3. Open OCLP → Post-Install Root Patch → Select Broadcom WiFi patch
-4. Apply patch and reboot
-5. WiFi and Bluetooth should work
-
-> ⚠️ OCLP root patches are overwritten by system updates. You need to re-apply after each major macOS update.
-
-## Serial Number Verification
-
-The serials in this config are randomly generated. **You MUST verify uniqueness before using iCloud/iMessage:**
-
-1. Generate serials for `Macmini8,1` using [GenSMBIOS](https://github.com/corpnewt/GenSMBIOS) (Serial + MLB + UUID)
-2. Open Apple's warranty check: https://checkcoverage.apple.com
-3. Enter the generated Serial Number
-4. If it shows **"Invalid serial" or "Purchase date not verified"** → ✅ Safe to use (no conflict with real Mac)
-5. If it shows warranty info for a Mac → ❌ Conflict, regenerate
-6. Replace `SystemSerialNumber`, `MLB`, and `SystemUUID` in config.plist with verified serials
-
-## Changelog
-
-### 2026-07-09
-- **Fixed NVMe crash**: Disabled `FixupAppleEfiImages` booter quirk — resolved random kernel panics/deadlocks on certain NVMe SSDs.
-- **Removed OCLP kexts**: Disabled BlueToolFixup, AMFIPass, IOSkywalkFamily, IO80211FamilyLegacy (not needed, no BCM94360CS2 card).
-- **Removed NVMeFix.kext**.
-- Updated IntelMausiEthernet to v3.0.3
+- USB port mapping (currently using HP 400 G5 Mini mapping, needs USBToolBox rebuild for 600 G4 SFF)
+- Audio layout-id (currently 23, may need adjustment for ALC codec)
+- iCloud / iMessage (need to generate unique SMBIOS serials with GenSMBIOS)
 
 ## Important Notes
 
-1. **SMBIOS Serials**: Current serials are unverified. Generate and verify your own before using iCloud/iMessage.
+1. **SMBIOS Serials**: The serials in this config are placeholder values. You MUST generate your own using [GenSMBIOS](https://github.com/corpnewt/GenSMBIOS) for Macmini8,1 before using iCloud/iMessage.
 
-2. **USB Mapping**: Custom mapping generated with USBToolBox (UTBMap.kext). Rebuild if hardware changes.
+2. **USB Mapping**: Use [USBToolBox](https://github.com/USBToolBox/tool) under macOS to create a proper port map, then replace `USBPorts.kext`.
 
-3. **DisplayPorts**: This machine has 2x DisplayPort on rear. The framebuffer patch maps 3 DP connectors. Adjust busid values if only one port has signal.
+3. **DisplayPorts**: This machine has 2x DisplayPort on rear. The framebuffer patch maps 3 DP connectors. If you only get signal on one port, adjust the framebuffer busid values.
 
-4. **Skip Board ID check**: This Booter Patch is disabled. If a future macOS update requires it, recalculate offsets for the corresponding OpenCore version.
+4. **Debug Log**: OpenCore logs are saved to `/var/log/OpenCore.log` on the macOS partition for troubleshooting.
 
-5. **SetupVirtualMap**: Must remain `false` on HP OEM boards. Setting `true` causes boot failure.
-
-6. **Editing config.plist**: **Do NOT use Python plistlib** — it corrupts XML plist format and causes infinite reboots. Use a plain text editor or ProperTree.
-
-7. **Migrating from USB to HDD**: After copying EFI to the hard disk EFI partition, set the hard disk boot entry as first priority in BIOS. Ensure the copy is complete, especially executables under `.kext/Contents/MacOS/`.
+5. **Migrating from USB to HDD**: After copying EFI to the hard disk EFI partition, set the hard disk boot entry as first priority in BIOS. Ensure the copy is complete, especially the executable files under `.kext/Contents/MacOS/`.
 
 ## Credits
 
 - [Acidanthera](https://github.com/acidanthera) - OpenCore, Lilu, VirtualSMC, WhateverGreen, AppleALC, and more
 - [Mieze](https://github.com/Mieze) - IntelMausiEthernet
-- [USBToolBox](https://github.com/USBToolBox/tool) - USB port mapping tool
-- [Dortania](https://dortania.github.io) - OpenCore Install Guide, OCLP
+- [Dortania](https://dortania.github.io) - OpenCore Install Guide
