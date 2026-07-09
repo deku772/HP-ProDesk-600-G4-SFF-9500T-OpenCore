@@ -1,3 +1,4 @@
+
 # HP ProDesk 600 G4 SFF - OpenCore EFI
 
 适用于 **惠普 ProDesk 600 G4 SFF**（i5-9500T）的 OpenCore EFI，运行 macOS Sequoia。
@@ -53,10 +54,6 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 -v
 | AppleALC | 1.9.7 | 声卡驱动 |
 | SMCProcessor | 1.3.7 | CPU 温度监控 |
 | SMCSuperIO | 1.3.7 | 风扇转速监控 |
-| NVMeFix | 1.1.3 | NVMe 电源管理 |
-| RestrictEvents | 1.1.6 | 系统更新修正 |
-| USBPorts | 1.0 | USB 端口映射 |
-
 ### 已禁用的 Kext（本机无对应硬件）
 
 itlwm、AirPortUtility、BlueToolFixup、IntelBluetoothFirmware、IntelBTPatcher、BluetoothFileExchange、FeatureUnlock
@@ -103,15 +100,10 @@ SSDT-TPM-Off、SSDT-AWAC-HPET-RTC、SSDT-PLUG、SSDT-PMCR、SSDT-PPMC、SSDT-MCH
 
 ## 待完善
 
-- **USB 端口映射**：当前使用的是 HP 400 G5 Mini 的映射文件，需要用 USBToolBox 在本机上重新生成
-- **声卡 layout-id**：当前设为 23，可能需要根据实际 ALC 编解码器调整
-- **iCloud / iMessage**：需要用 GenSMBIOS 为 Macmini8,1 生成唯一的序列号
-
 ## 注意事项
 
 1. **SMBIOS 序列号**：配置中的序列号为占位符，使用 iCloud/iMessage 前必须用 [GenSMBIOS](https://github.com/corpnewt/GenSMBIOS) 为 Macmini8,1 生成你自己的序列号。
 
-2. **USB 映射**：在 macOS 下使用 [USBToolBox](https://github.com/USBToolBox/tool) 生成本机专属端口映射，替换 `USBPorts.kext`。
 
 3. **DisplayPort 端口**：本机背面有 2 个 DP 口。当前帧缓冲补丁映射了 3 个 DP 连接器。如果只有一个口有信号，需调整 framebuffer busid 值。
 
@@ -176,10 +168,6 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 -v
 | AppleALC | 1.9.7 | Audio |
 | SMCProcessor | 1.3.7 | CPU temp monitoring |
 | SMCSuperIO | 1.3.7 | Fan speed monitoring |
-| NVMeFix | 1.1.3 | NVMe power management |
-| RestrictEvents | 1.1.6 | System update fix |
-| USBPorts | 1.0 | USB port mapping |
-
 ### Disabled Kexts (no hardware)
 
 itlwm, AirPortUtility, BlueToolFixup, IntelBluetoothFirmware, IntelBTPatcher, BluetoothFileExchange, FeatureUnlock
@@ -226,7 +214,6 @@ SSDT-TPM-Off, SSDT-AWAC-HPET-RTC, SSDT-PLUG, SSDT-PMCR, SSDT-PPMC, SSDT-MCHC, SS
 
 ## What Needs Work
 
-- USB port mapping (currently using HP 400 G5 Mini mapping, needs USBToolBox rebuild for 600 G4 SFF)
 - Audio layout-id (currently 23, may need adjustment for ALC codec)
 - iCloud / iMessage (need to generate unique SMBIOS serials with GenSMBIOS)
 
@@ -234,7 +221,6 @@ SSDT-TPM-Off, SSDT-AWAC-HPET-RTC, SSDT-PLUG, SSDT-PMCR, SSDT-PPMC, SSDT-MCHC, SS
 
 1. **SMBIOS Serials**: The serials in this config are placeholder values. You MUST generate your own using [GenSMBIOS](https://github.com/corpnewt/GenSMBIOS) for Macmini8,1 before using iCloud/iMessage.
 
-2. **USB Mapping**: Use [USBToolBox](https://github.com/USBToolBox/tool) under macOS to create a proper port map, then replace `USBPorts.kext`.
 
 3. **DisplayPorts**: This machine has 2x DisplayPort on rear. The framebuffer patch maps 3 DP connectors. If you only get signal on one port, adjust the framebuffer busid values.
 
