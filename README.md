@@ -15,7 +15,7 @@
 | 内存 | 16GB DDR4 2133MHz |
 | 硬盘 | 256GB NVMe SSD |
 | 网卡 | Intel I219（有线） |
-| WiFi/蓝牙 | 无 |
+| WiFi/蓝牙 | BCM94360Z4（原生 Apple 兼容，WiFi+BT 二合一） |
 
 ## OpenCore 版本
 
@@ -54,13 +54,33 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 -v
 | AppleALC | 1.9.7 | 声卡驱动 |
 | SMCProcessor | 1.3.7 | CPU 温度监控 |
 | SMCSuperIO | 1.3.7 | 风扇转速监控 |
+| AMFIPass | 1.4.1 | 绕过 AMFI 安全策略 |
+| IOSkywalkFamily | 1.0 | WiFi Skywalk 框架 |
+| IO80211FamilyLegacy | 1200.12.2b1 | WiFi 遗产驱动框架 |
+| AirPortBrcmNIC | 1400.1.1 | BCM WiFi 原生驱动 |
+| USBToolBox | 1.1.1 | USB 端口映射工具 |
+| UTBMap | 1.1 | HP 600 G4 SFF USB 端口映射 |
+| RestrictEvents | - | 限制事件补丁 |
+
+### WiFi/蓝牙
+
+BCM94360Z4 是 Apple 原生兼容网卡，**不需要**以下 kext（EFI 中绝对不存在）：
+- AirportBrcmFixup
+- BluetoothFixup
+- BlueToolFixup
+- BrcmFirmwareData
+- BrcmPatchRAM3
+
+WiFi 通过 `IO80211FamilyLegacy + AirPort_BrcmNIC` 原生驱动，配合 OCLP-Mod 2.6.9 Root Patch。
+蓝牙通过 `UBTC ACPI + SSDT-BT` 注入电源状态，使用原生 UART transport。
+
 ### 已禁用的 Kext（本机无对应硬件）
 
-itlwm、AirPortUtility、BlueToolFixup、IntelBluetoothFirmware、IntelBTPatcher、BluetoothFileExchange、FeatureUnlock
+itlwm、AirPortUtility、IntelBluetoothFirmware、IntelBTPatcher、BluetoothFileExchange、FeatureUnlock
 
-### ACPI 补丁（13 个 SSDT）
+### ACPI 补丁（14 个 SSDT）
 
-SSDT-TPM-Off、SSDT-AWAC-HPET-RTC、SSDT-PLUG、SSDT-PMCR、SSDT-PPMC、SSDT-MCHC、SSDT-XOSI、SSDT-XSPI、SSDT-DMAC、SSDT-USBX、SSDT-EC、SSDT-WAK、SSDT-PTS
+SSDT-TPM-Off、SSDT-AWAC-HPET-RTC、SSDT-PLUG、SSDT-PMCR、SSDT-PPMC、SSDT-MCHC、SSDT-XOSI、SSDT-XSPI、SSDT-DMAC、SSDT-USBX、SSDT-EC、SSDT-WAK、SSDT-PTS、**SSDT-BT**（蓝牙电源状态注入）
 
 ### Booter Quirks
 
@@ -94,11 +114,15 @@ SSDT-TPM-Off、SSDT-AWAC-HPET-RTC、SSDT-PLUG、SSDT-PMCR、SSDT-PPMC、SSDT-MCH
 - macOS Sequoia 启动和安装
 - Intel UHD 630 显示输出（DisplayPort）
 - Intel I219 有线网卡
-- USB 端口（部分可用，需定制映射）
-- 声卡（可能需要调整 layout-id）
+- WiFi（BCM94360Z4 原生驱动 + OCLP-Mod 2.6.9）
+- USB 端口（UTBMap 定制映射）
 - CPU 电源管理
 
 ## 待完善
+
+- 蓝牙（BCM94360Z4 原生芯片，IOBluetoothHCIController 已连接，Address=NULL 需排查固件上传）
+- 声卡（可能需要调整 layout-id）
+- iCloud / iMessage（需生成唯一 SMBIOS 序列号）
 
 ## 注意事项
 
@@ -133,7 +157,7 @@ OpenCore EFI for **HP ProDesk 600 G4 SFF** with **Intel Core i5-9500T**, running
 | RAM | 16GB DDR4 2133MHz |
 | Storage | 256GB NVMe SSD |
 | Ethernet | Intel I219 |
-| WiFi/Bluetooth | None |
+| WiFi/Bluetooth | BCM94360Z4 (Native Apple-compatible WiFi+BT) |
 
 ## OpenCore Version
 
@@ -168,13 +192,33 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 -v
 | AppleALC | 1.9.7 | Audio |
 | SMCProcessor | 1.3.7 | CPU temp monitoring |
 | SMCSuperIO | 1.3.7 | Fan speed monitoring |
+| AMFIPass | 1.4.1 | Bypass AMFI security policy |
+| IOSkywalkFamily | 1.0 | WiFi Skywalk framework |
+| IO80211FamilyLegacy | 1200.12.2b1 | WiFi legacy driver framework |
+| AirPortBrcmNIC | 1400.1.1 | BCM WiFi native driver |
+| USBToolBox | 1.1.1 | USB port mapping tool |
+| UTBMap | 1.1 | HP 600 G4 SFF USB port map |
+| RestrictEvents | - | Restrict events patch |
+
+### WiFi/Bluetooth
+
+BCM94360Z4 is a native Apple-compatible card. The following kexts are **NOT** needed (absent from EFI):
+- AirportBrcmFixup
+- BluetoothFixup
+- BlueToolFixup
+- BrcmFirmwareData
+- BrcmPatchRAM3
+
+WiFi uses `IO80211FamilyLegacy + AirPort_BrcmNIC` native driver with OCLP-Mod 2.6.9 Root Patch.
+Bluetooth uses `UBTC ACPI + SSDT-BT` power-state injection with native UART transport.
+
 ### Disabled Kexts (no hardware)
 
-itlwm, AirPortUtility, BlueToolFixup, IntelBluetoothFirmware, IntelBTPatcher, BluetoothFileExchange, FeatureUnlock
+itlwm, AirPortUtility, IntelBluetoothFirmware, IntelBTPatcher, BluetoothFileExchange, FeatureUnlock
 
-### ACPI (13 SSDTs)
+### ACPI (14 SSDTs)
 
-SSDT-TPM-Off, SSDT-AWAC-HPET-RTC, SSDT-PLUG, SSDT-PMCR, SSDT-PPMC, SSDT-MCHC, SSDT-XOSI, SSDT-XSPI, SSDT-DMAC, SSDT-USBX, SSDT-EC, SSDT-WAK, SSDT-PTS
+SSDT-TPM-Off, SSDT-AWAC-HPET-RTC, SSDT-PLUG, SSDT-PMCR, SSDT-PPMC, SSDT-MCHC, SSDT-XOSI, SSDT-XSPI, SSDT-DMAC, SSDT-USBX, SSDT-EC, SSDT-WAK, SSDT-PTS, **SSDT-BT** (Bluetooth power-state injection)
 
 ### Booter Quirks
 
@@ -208,13 +252,14 @@ SSDT-TPM-Off, SSDT-AWAC-HPET-RTC, SSDT-PLUG, SSDT-PMCR, SSDT-PPMC, SSDT-MCHC, SS
 - macOS Sequoia boot and installation
 - Intel UHD 630 display output (DisplayPort)
 - Intel I219 Ethernet
-- USB ports (partial, needs custom mapping)
-- Audio (may need layout-id adjustment)
+- WiFi (BCM94360Z4 native driver + OCLP-Mod 2.6.9)
+- USB ports (UTBMap custom mapping)
 - CPU power management
 
 ## What Needs Work
 
-- Audio layout-id (currently 23, may need adjustment for ALC codec)
+- Bluetooth (BCM94360Z4 native chip, IOBluetoothHCIController connected, Address=NULL - firmware upload needs debugging)
+- Audio (may need layout-id adjustment)
 - iCloud / iMessage (need to generate unique SMBIOS serials with GenSMBIOS)
 
 ## Important Notes
