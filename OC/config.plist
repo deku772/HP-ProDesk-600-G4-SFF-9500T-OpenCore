@@ -112,7 +112,7 @@
 			</dict>
 			<dict>
 				<key>Comment</key>
-				<string>Inject Bluetooth power-state and claimed address into UBTC for BCM94360Z4</string>
+				<string>Inject Bluetooth _DSM with Transport=USB into UBTC for BCM94360Z4</string>
 				<key>Enabled</key>
 				<true/>
 				<key>Path</key>
@@ -545,44 +545,6 @@
 				<key>TableSignature</key>
 				<data>
 				RFNEVA==
-				</data>
-			</dict>
-			<dict>
-				<key>Base</key>
-				<string></string>
-				<key>BaseSkip</key>
-				<integer>0</integer>
-				<key>Comment</key>
-				<string>Rename UBTC to XBTC for Bluetooth SSDT override</string>
-				<key>Count</key>
-				<integer>0</integer>
-				<key>Enabled</key>
-				<true/>
-				<key>Find</key>
-				<data>
-				NTU0MjU0NDM=
-				</data>
-				<key>Limit</key>
-				<integer>0</integer>
-				<key>Mask</key>
-				<data>
-				</data>
-				<key>OemTableId</key>
-				<string></string>
-				<key>Replace</key>
-				<data>
-				NTg0MjU0NDM=
-				</data>
-				<key>ReplaceMask</key>
-				<data>
-				</data>
-				<key>Skip</key>
-				<integer>0</integer>
-				<key>TableLength</key>
-				<integer>0</integer>
-				<key>TableSignature</key>
-				<data>
-				NDQ1MzQ0NTQ=
 				</data>
 			</dict>
 		</array>
