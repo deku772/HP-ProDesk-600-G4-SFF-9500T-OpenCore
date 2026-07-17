@@ -110,14 +110,6 @@
 				<key>Path</key>
 				<string>SSDT-PTS.aml</string>
 			</dict>
-			<dict>
-				<key>Comment</key>
-				<string>Inject Bluetooth _DSM with Transport=USB into UBTC for BCM94360Z4</string>
-				<key>Enabled</key>
-				<true/>
-				<key>Path</key>
-				<string>SSDT-BT.aml</string>
-			</dict>
 		</array>
 		<key>Delete</key>
 		<array/>
