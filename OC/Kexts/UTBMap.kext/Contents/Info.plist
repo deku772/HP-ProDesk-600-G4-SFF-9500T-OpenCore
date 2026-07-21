@@ -38,7 +38,7 @@
 			<dict>
 				<key>port-count</key>
 				<data>
-				GgAAAA==
+				FgAAAA==
 				</data>
 				<key>ports</key>
 				<dict>
@@ -175,33 +175,6 @@
 						<key>port</key>
 						<data>
 						FQAAAA==
-						</data>
-					</dict>
-					<key>SS04</key>
-					<dict>
-						<key>UsbConnector</key>
-						<integer>3</integer>
-						<key>port</key>
-						<data>
-						FgAAAA==
-						</data>
-					</dict>
-					<key>SS05</key>
-					<dict>
-						<key>UsbConnector</key>
-						<integer>3</integer>
-						<key>port</key>
-						<data>
-						GQAAAA==
-						</data>
-					</dict>
-					<key>SS06</key>
-					<dict>
-						<key>UsbConnector</key>
-						<integer>3</integer>
-						<key>port</key>
-						<data>
-						GgAAAA==
 						</data>
 					</dict>
 				</dict>
