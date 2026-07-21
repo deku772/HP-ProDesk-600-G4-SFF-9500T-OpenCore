@@ -22,6 +22,10 @@
 	<dict>
 		<key>Airport_BrcmNIC</key>
 		<dict>
+			<key>APFeatures</key>
+			<data>
+			DwAAAA==
+			</data>
 			<key>CFBundleIdentifier</key>
 			<string>com.apple.driver.AirPort.BrcmNIC</string>
 			<key>IOClass</key>
