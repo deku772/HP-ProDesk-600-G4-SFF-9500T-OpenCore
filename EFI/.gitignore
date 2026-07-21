@@ -1,0 +1,13 @@
+# macOS junk
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+__MACOSX/
+
+# Old config backup
+oldConfig.plist
+
+# Temp files
+*.tmp
+*.bak
