@@ -46,8 +46,66 @@
 ### 启动参数
 
 ```
-keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall
+keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall amfi=0x80
 ```
+
+> 注：`amfi=0x80` 于 2026-07-21 添加，配合 AMFIPass.kext 在 SIP 0x0803 下放宽 AMFI 限制，保障 OpenCore kext 注入。参考 5T33Z0/OCLP4Hackintosh WiFi_Sonoma 指南。
+
+### SIP 配置
+
+`csr-active-config = 0x0803`（部分启用 SIP）
+
+```
+0x0803 = CSR_ALLOW_UNTRUSTED_KEXTS
+       | CSR_ALLOW_UNRESTRICTED_FS
+       | CSR_ALLOW_EXECUTABLE_POLICY_OVERRIDE
+```
+
+启用的保护：NVRAM Protections、BaseSystem Verification、Debugging Restrictions、DTrace Restrictions
+禁用的保护：Kext Signing、Filesystem Protections（为 OCLP Root Patch 和 kext 注入保留）
+
+> **演变历史**：最初使用 `0x0FFF`（全禁用），后发现全禁用导致钥匙串完整性失效，影响 AirDrop（详见下方 AirDrop 章节）。2026-07-21 改为 `0x0803`。
+
+### AirDrop 状态
+
+**当前状态：部分工作（单向）**
+
+- iPad/Mac 互相能发现对方（BLE 广播成功）
+- 手机/iPad → Mac 方向的 AirDrop 可以工作
+- Mac → 手机/iPad 方向找不到设备（不完整）
+
+**根因分析**：
+
+完整因果链（通过 bluetoothd/securityd 日志确认）：
+```
+SIP 禁用 CSR_ALLOW_UNRESTRICTED_FS（Filesystem Protections: disabled）
+    ↓
+securityd: "found a non-proper sample, skipping..."（钥匙串完整性校验失败）
+    ↓
+bluetoothd: "Cloud master IRK and address are not available in storage"
+    ↓
+bluetoothd: "Cannot generate current user's RRA when the IRK is set to 0's" (STATUS 103)
+    ↓
+本地 IRK 全零 → 无法生成 RRA（Resolvable Random Address）
+    ↓
+AirDrop 双向发现不完整（能被发现，但不能主动发现其他设备）
+```
+
+**关键证据**：
+- `bluetoothd` 能读取其他设备的 IRK（`Read IRK for device ... : result 150`）
+- 但自己的 `Cloud master IRK` 从钥匙串取不到（`non-proper sample`）
+- BLE 广播本身成功（`Started advertising successfully status=0`）
+- AWDL Enabled: No（数据传输层不工作）
+
+**为什么这是黑苹果架构限制**：
+- OCLP Root Patch 需要禁用 Filesystem Protections（注入 IO80211FamilyLegacy 等 kext）
+- AirDrop 完整 IRK 机制需要完整的文件系统保护（保护钥匙串完整性）
+- 两者 contradictory：0x0803 已是最佳平衡点（比 0x0FFF 改善了 BLE 广播和发现）
+
+**已排除的方案**：
+- `0x0000`（完全启用 SIP）：Root Patch 完全失效，Wi-Fi 不可用
+- BlueToolFixup + BrcmPatchRAM3：仅对非原生卡有效，本机 BCM94360Z4 是原生 Apple 兼容卡（Vendor ID: 0x004C），蓝牙固件已正常加载（v150 c9318），加装反而与 OCLP Root Patch 冲突
+- 重建钥匙串 + 重登 iCloud：钥匙串条目完整性问题是架构限制，非条目损坏
 
 ### 启用的 Kext
 
@@ -207,8 +265,58 @@ If you need to boot without a display (e.g., for remote control), you **must use
 ### Boot Arguments
 
 ```
-keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall
+keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall amfi=0x80
 ```
+
+> Note: `amfi=0x80` added 2026-07-21 to relax AMFI alongside AMFIPass.kext under SIP 0x0803, ensuring OpenCore kext injection. Per 5T33Z0/OCLP4Hackintosh WiFi_Sonoma guide.
+
+### SIP Configuration
+
+`csr-active-config = 0x0803` (partial SIP)
+
+```
+0x0803 = CSR_ALLOW_UNTRUSTED_KEXTS
+       | CSR_ALLOW_UNRESTRICTED_FS
+       | CSR_ALLOW_EXECUTABLE_POLICY_OVERRIDE
+```
+
+Protected: NVRAM Protections, BaseSystem Verification, Debugging Restrictions, DTrace Restrictions
+Unprotected: Kext Signing, Filesystem Protections (for OCLP Root Patch and kext injection)
+
+> **History**: Originally `0x0FFF` (fully disabled), changed to `0x0803` on 2026-07-21 after discovering full disable broke keychain integrity and AirDrop (see AirDrop section below).
+
+### AirDrop Status
+
+**Current: Partial (one-way)**
+
+- iPad and Mac can discover each other (BLE advertising works)
+- Phone/iPad → Mac AirDrop works
+- Mac → Phone/iPad cannot find devices (incomplete)
+
+**Root Cause** (confirmed via bluetoothd/securityd logs):
+```
+SIP disables CSR_ALLOW_UNRESTRICTED_FS (Filesystem Protections: disabled)
+    ↓
+securityd: "found a non-proper sample, skipping..." (keychain integrity check fails)
+    ↓
+bluetoothd: "Cloud master IRK and address are not available in storage"
+    ↓
+bluetoothd: "Cannot generate current user's RRA when the IRK is set to 0's" (STATUS 103)
+    ↓
+Local IRK all zeros → cannot generate RRA (Resolvable Random Address)
+    ↓
+AirDrop bidirectional discovery incomplete
+```
+
+**Why this is a Hackintosh architectural limitation**:
+- OCLP Root Patch requires disabling Filesystem Protections (to inject IO80211FamilyLegacy etc.)
+- AirDrop's full IRK mechanism requires complete filesystem protection (keychain integrity)
+- These are contradictory; 0x0803 is the best balance (improved BLE advertising vs 0x0FFF)
+
+**Excluded solutions**:
+- `0x0000` (full SIP): Root Patch fails completely, Wi-Fi unusable
+- BlueToolFixup + BrcmPatchRAM3: only for non-native cards; BCM94360Z4 is native Apple-compatible (Vendor ID: 0x004C), firmware already loaded (v150 c9318), adding these conflicts with OCLP Root Patch
+- Keychain rebuild + iCloud re-login: integrity issue is architectural, not corruption
 
 ### Enabled Kexts
 
