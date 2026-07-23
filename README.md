@@ -1,7 +1,7 @@
 
 # HP ProDesk 600 G4 SFF - OpenCore EFI
 
-适用于 **惠普 ProDesk 600 G4 SFF**（i5-9500T）的 OpenCore EFI，运行 macOS Sequoia。
+适用于 **惠普 ProDesk 600 G4 SFF**（i5-9500T）的 OpenCore EFI，运行 macOS Sequoia 15.7.8。
 
 ---
 
@@ -23,7 +23,8 @@
 
 ## macOS 兼容性
 
-- macOS Sequoia（已测试）
+- macOS Sequoia 15.7.8 (Build 24G814)（已测试）
+- macOS Sequoia 15.7.7 (Build 24G720)（此前版本，已升级）
 
 ## SMBIOS
 
@@ -46,10 +47,12 @@
 ### 启动参数
 
 ```
-keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall amfi=0x80
+keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall amfi=0x80 brcmfx-country=US io80211.awdl=1
 ```
 
 > 注：`amfi=0x80` 于 2026-07-21 添加，配合 AMFIPass.kext 在 SIP 0x0803 下放宽 AMFI 限制，保障 OpenCore kext 注入。参考 5T33Z0/OCLP4Hackintosh WiFi_Sonoma 指南。
+>
+> 注：`brcmfx-country=US` 和 `io80211.awdl=1` 于 2026-07-22 添加，用于修复 WiFi country code 和尝试启用 AWDL。AWDL 最终未能激活（详见下方 AirDrop 章节）。
 
 ### SIP 配置
 
@@ -68,44 +71,32 @@ keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e100
 
 ### AirDrop 状态
 
-**当前状态：部分工作（单向）**
+**当前状态：不工作**
 
-- iPad/Mac 互相能发现对方（BLE 广播成功）
-- 手机/iPad → Mac 方向的 AirDrop 可以工作
-- Mac → 手机/iPad 方向找不到设备（不完整）
+AirDrop 需要 AWDL（Apple Wireless Direct Link）协议在 WiFi 数据链路层建立点对点连接。本机 AWDL 始终无法激活。
 
-**根因分析**：
+**根因分析**（2026-07-22 深度调试）：
 
-完整因果链（通过 bluetoothd/securityd 日志确认）：
-```
-SIP 禁用 CSR_ALLOW_UNRESTRICTED_FS（Filesystem Protections: disabled）
-    ↓
-securityd: "found a non-proper sample, skipping..."（钥匙串完整性校验失败）
-    ↓
-bluetoothd: "Cloud master IRK and address are not available in storage"
-    ↓
-bluetoothd: "Cannot generate current user's RRA when the IRK is set to 0's" (STATUS 103)
-    ↓
-本地 IRK 全零 → 无法生成 RRA（Resolvable Random Address）
-    ↓
-AirDrop 双向发现不完整（能被发现，但不能主动发现其他设备）
-```
+1. **MACF/Sandbox 阻止 IO80211AsyncEventUserClient**：airportd 等进程尝试通过 IOServiceOpen 打开 UserClient 时，被内核 MACF 框架拒绝（返回 `0xe00002e2` kIOReturnNotPermitted），被迫回退到 IOCTL 兼容路径
+2. **类名不匹配**：OCLP-Mod 注入的旧版 IO80211FamilyLegacy kext 注册的类名为 `IO80211AsyncEventUserClient`（新名），而旧版 airportd 的 entitlement 期望 `IO80211APIUserClient`（旧名）
+3. **无法同时满足**：将 kext 类名改为旧名可让 airportd 通过 MACF，但 rapportd 等新版进程的 Sandbox profile 期望新名；保持新名则 airportd 被拒绝
+4. **重新签名 airportd 也无效**：MACF/Sandbox 只信任 Apple 平台二进制签名的 entitlements，adhoc 签名不被信任
+5. **setUCMProfile 失败**：即使 IOServiceOpen 成功，setUCMProfile 通过 IOCTL 返回 "Operation not permitted"
 
-**关键证据**：
-- `bluetoothd` 能读取其他设备的 IRK（`Read IRK for device ... : result 150`）
-- 但自己的 `Cloud master IRK` 从钥匙串取不到（`non-proper sample`）
-- BLE 广播本身成功（`Started advertising successfully status=0`）
-- AWDL Enabled: No（数据传输层不工作）
+**已尝试的修复**（6 个 kext 二进制 patch，最终全部回退）：
 
-**为什么这是黑苹果架构限制**：
-- OCLP Root Patch 需要禁用 Filesystem Protections（注入 IO80211FamilyLegacy 等 kext）
-- AirDrop 完整 IRK 机制需要完整的文件系统保护（保护钥匙串完整性）
-- 两者 contradictory：0x0803 已是最佳平衡点（比 0x0FFF 改善了 BLE 广播和发现）
+| # | 修改 | 作用 | 结果 |
+|---|------|------|------|
+| 1 | newUserClient type 检查绕过 | 允许 airportd 打开 UserClient | 0xe00002e2 → 0xe00002bc |
+| 2 | initWithTask entitlement 检查绕过 | 绕过 kext 内部权限检查 | 进入下一层错误 |
+| 3 | APFeatures: 1→15 | 启用 AWDL/AirDrop/AirPlay 标志位 | awdl0 接口激活但协议 inactive |
+| 4 | VirtualInterface type 检查绕过 | 允许 awdl0 虚拟接口 UserClient | 部分推进 |
+| 5 | VirtualInterface entitlement 检查绕过 | 绕过虚拟接口权限检查 | 部分推进 |
+| 6 | kext 类名 AsyncEvent→API | 修复 airportd MACF 匹配 | airportd 通过但 rapportd 等被拒绝 |
 
-**已排除的方案**：
-- `0x0000`（完全启用 SIP）：Root Patch 完全失效，Wi-Fi 不可用
-- BlueToolFixup + BrcmPatchRAM3：仅对非原生卡有效，本机 BCM94360Z4 是原生 Apple 兼容卡（Vendor ID: 0x004C），蓝牙固件已正常加载（v150 c9318），加装反而与 OCLP Root Patch 冲突
-- 重建钥匙串 + 重登 iCloud：钥匙串条目完整性问题是架构限制，非条目损坏
+**结论**：AWDL 在 OCLP-Mod 黑苹果架构下无法完整激活，是架构限制。AirDrop（苹果设备间）不可用。
+
+> **注意**：蓝牙文件传输（发送给安卓等其他蓝牙设备）正常工作，不受影响。
 
 ### 启用的 Kext
 
@@ -128,16 +119,16 @@ AirDrop 双向发现不完整（能被发现，但不能主动发现其他设备
 
 ### WiFi/蓝牙
 
-BCM94360Z4 是 Apple 原生兼容网卡，**不需要**以下 kext（EFI 中绝对不存在）：
-- AirportBrcmFixup
-- BluetoothFixup
-- BlueToolFixup
-- BrcmFirmwareData
-- BrcmPatchRAM3
+BCM94360Z4 是 Apple 原生兼容网卡。WiFi 通过 `IO80211FamilyLegacy + AirPort_BrcmNIC` 原生驱动，配合 OCLP-Mod 2.6.9 Root Patch（注意：3.x 版本在 Sequoia 上不稳定，务必使用 2.6.9）。
 
-WiFi 通过 `IO80211FamilyLegacy + AirPort_BrcmNIC` 原生驱动，配合 OCLP-Mod 2.6.9 Root Patch（注意：3.x 版本在 Sequoia 上不稳定，务必使用 2.6.9）。
+蓝牙通过 UTBMap 的 **HS14（port 14）内部端口映射**工作。BCM94360Z4 的蓝牙通过 USB 接口连接到主板 XHCI 控制器的内部端口，UTBMap 将该端口标记为 `UsbConnector=255`（内部设备），macOS 才能枚举蓝牙设备。蓝牙使用 **USB transport**（非 UART），Address 和固件版本均正常。
 
-蓝牙通过 UTBMap 的 **HS11（port 11）和 HS14（port 14）内部端口映射**工作。BCM94360Z4 的蓝牙通过 USB 接口连接到主板 XHCI 控制器的内部端口，UTBMap 将这些端口标记为 `UsbConnector=255`（内部设备），macOS 才能枚举蓝牙设备。蓝牙使用 **USB transport**（非 UART），Address 和固件版本均正常。
+蓝牙当前状态：
+- 蓝牙连接和文件传输正常（可搜索和连接非苹果设备）
+- **无法搜索到苹果自有设备**（如 iPhone、iPad），这是 OCLP-Mod 架构限制
+- AirDrop（苹果设备间）不工作（AWDL 协议无法激活，详见上方章节）
+
+> **注意**：EFI 中包含 AirportBrcmFixup (2.2.0) + brcmfx-country=US 用于修复 WiFi country code 问题。BrcmPatchRAM3 + BlueToolFixup + BrcmFirmwareData 用于蓝牙固件加载。
 
 > **重要**：之前尝试过 SSDT-BT（通过 UBTC ACPI 注入 _DSM）三次均失败——UBTC 实际是 USB Type-C UCSI 控制器（`_HID=USBC000`），不是蓝牙设备，且已有 _DSM 方法。蓝牙的正确修复方式是 UTBMap 端口映射，不是 SSDT 注入。
 
@@ -180,11 +171,13 @@ SSDT-TPM-Off、SSDT-AWAC-HPET-RTC、SSDT-PLUG、SSDT-PMCR、SSDT-PPMC、SSDT-MCH
 
 ## 正常工作的功能
 
-- macOS Sequoia 启动和安装
+- macOS Sequoia 15.7.8 启动和安装
 - Intel UHD 630 显示输出（HDMI）
+- 无显示器启动（物理 HDMI 诱骗器，已确认正常工作）
 - Intel I219 有线网卡
 - WiFi（BCM94360Z4 原生驱动 + OCLP-Mod 2.6.9）
-- 蓝牙（BCM94360Z4，UTBMap HS11/HS14 内部端口映射，USB transport，Address/Firmware 正常）
+- 蓝牙（BCM94360Z4，UTBMap HS14 内部端口映射，USB transport，Address/Firmware 正常）
+- 蓝牙文件传输（可连接非苹果设备，如安卓手机）
 - USB 端口（UTBMap 定制映射，含内部蓝牙端口）
 - CPU 电源管理
 
@@ -192,13 +185,14 @@ SSDT-TPM-Off、SSDT-AWAC-HPET-RTC、SSDT-PLUG、SSDT-PMCR、SSDT-PPMC、SSDT-MCH
 
 - 声卡（可能需要调整 layout-id）
 - iCloud / iMessage（需生成唯一 SMBIOS 序列号）
-- 无显示器启动（需物理 HDMI 欺骗器，已购买待测试）
+- AirDrop（AWDL 架构限制，详见上方章节）
+- 蓝牙搜索苹果自有设备（OCLP-Mod 架构限制）
 
 ## 注意事项
 
 1. **SMBIOS 序列号**：配置中的序列号为占位符，使用 iCloud/iMessage 前必须用 [GenSMBIOS](https://github.com/corpnewt/GenSMBIOS) 为 Macmini8,1 生成你自己的序列号。
 
-2. **无显示器启动**：EDID 注入（`AAPL00,override-no-connect`）对无显示器启动**无效**。问题在 UEFI GOP 阶段而非 macOS，iGPU 必须在开机自检时检测到显示设备才初始化。解决方案是使用物理 HDMI 欺骗器（插入 HDMI 口），让 GOP 认为"有显示器"。启动完成后拔掉欺骗器也不影响使用。
+2. **无显示器启动**：EDID 注入（`AAPL00,override-no-connect`）对无显示器启动**无效**。问题在 UEFI GOP 阶段而非 macOS，iGPU 必须在开机自检时检测到显示设备才初始化。解决方案是使用物理 HDMI 诱骗器（插入 HDMI 口），让 GOP 认为"有显示器"。启动完成后拔掉诱骗器也不影响使用。**已确认 HDMI 诱骗器正常工作**。
 
 3. **显示输出端口**：本机背面有 2 个 DP 口。当前帧缓冲补丁将 3 个 connector 全设为 HDMI（type=0x0008），busid 分别为 1/2/4。如果只有一个口有信号，需调整 framebuffer busid 值。
 
@@ -220,7 +214,7 @@ SSDT-TPM-Off、SSDT-AWAC-HPET-RTC、SSDT-PLUG、SSDT-PMCR、SSDT-PPMC、SSDT-MCH
 
 # HP ProDesk 600 G4 SFF - OpenCore EFI (English)
 
-OpenCore EFI for **HP ProDesk 600 G4 SFF** with **Intel Core i5-9500T**, running macOS Sequoia.
+OpenCore EFI for **HP ProDesk 600 G4 SFF** with **Intel Core i5-9500T**, running macOS Sequoia 15.7.8.
 
 ---
 
@@ -242,7 +236,8 @@ OpenCore EFI for **HP ProDesk 600 G4 SFF** with **Intel Core i5-9500T**, running
 
 ## macOS Compatibility
 
-- macOS Sequoia (tested)
+- macOS Sequoia 15.7.8 (Build 24G814) (tested)
+- macOS Sequoia 15.7.7 (Build 24G720) (previous version, upgraded)
 
 ## SMBIOS
 
@@ -265,10 +260,12 @@ If you need to boot without a display (e.g., for remote control), you **must use
 ### Boot Arguments
 
 ```
-keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall amfi=0x80
+keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall amfi=0x80 brcmfx-country=US io80211.awdl=1
 ```
 
 > Note: `amfi=0x80` added 2026-07-21 to relax AMFI alongside AMFIPass.kext under SIP 0x0803, ensuring OpenCore kext injection. Per 5T33Z0/OCLP4Hackintosh WiFi_Sonoma guide.
+>
+> Note: `brcmfx-country=US` and `io80211.awdl=1` added 2026-07-22 to fix WiFi country code and attempt AWDL activation. AWDL ultimately failed to activate (see AirDrop section below).
 
 ### SIP Configuration
 
@@ -287,36 +284,32 @@ Unprotected: Kext Signing, Filesystem Protections (for OCLP Root Patch and kext 
 
 ### AirDrop Status
 
-**Current: Partial (one-way)**
+**Current: Not working**
 
-- iPad and Mac can discover each other (BLE advertising works)
-- Phone/iPad → Mac AirDrop works
-- Mac → Phone/iPad cannot find devices (incomplete)
+AirDrop requires AWDL (Apple Wireless Direct Link) protocol to establish peer-to-peer connections at the WiFi data link layer. AWDL could not be activated on this machine.
 
-**Root Cause** (confirmed via bluetoothd/securityd logs):
-```
-SIP disables CSR_ALLOW_UNRESTRICTED_FS (Filesystem Protections: disabled)
-    ↓
-securityd: "found a non-proper sample, skipping..." (keychain integrity check fails)
-    ↓
-bluetoothd: "Cloud master IRK and address are not available in storage"
-    ↓
-bluetoothd: "Cannot generate current user's RRA when the IRK is set to 0's" (STATUS 103)
-    ↓
-Local IRK all zeros → cannot generate RRA (Resolvable Random Address)
-    ↓
-AirDrop bidirectional discovery incomplete
-```
+**Root Cause** (deep debugging on 2026-07-22):
 
-**Why this is a Hackintosh architectural limitation**:
-- OCLP Root Patch requires disabling Filesystem Protections (to inject IO80211FamilyLegacy etc.)
-- AirDrop's full IRK mechanism requires complete filesystem protection (keychain integrity)
-- These are contradictory; 0x0803 is the best balance (improved BLE advertising vs 0x0FFF)
+1. **MACF/Sandbox blocks IO80211AsyncEventUserClient**: When airportd and other processes try to open UserClient via IOServiceOpen, the kernel MACF framework denies access (returns `0xe00002e2` kIOReturnNotPermitted), forcing fallback to IOCTL compatibility path
+2. **Class name mismatch**: OCLP-Mod's injected legacy IO80211FamilyLegacy kext registers class name `IO80211AsyncEventUserClient` (new name), but the legacy airportd's entitlements expect `IO80211APIUserClient` (old name)
+3. **Cannot satisfy both**: Changing kext class name to old name lets airportd pass MACF, but rapportd and other new-version processes' Sandbox profiles expect the new name; keeping new name blocks airportd
+4. **Re-signing airportd also fails**: MACF/Sandbox only trusts entitlements from Apple platform binary signatures; adhoc signatures are not trusted
+5. **setUCMProfile fails**: Even when IOServiceOpen succeeds, setUCMProfile via IOCTL returns "Operation not permitted"
 
-**Excluded solutions**:
-- `0x0000` (full SIP): Root Patch fails completely, Wi-Fi unusable
-- BlueToolFixup + BrcmPatchRAM3: only for non-native cards; BCM94360Z4 is native Apple-compatible (Vendor ID: 0x004C), firmware already loaded (v150 c9318), adding these conflicts with OCLP Root Patch
-- Keychain rebuild + iCloud re-login: integrity issue is architectural, not corruption
+**Attempted fixes** (6 kext binary patches, all ultimately reverted):
+
+| # | Modification | Purpose | Result |
+|---|---|---|---|
+| 1 | newUserClient type check bypass | Allow airportd to open UserClient | 0xe00002e2 → 0xe00002bc |
+| 2 | initWithTask entitlement check bypass | Bypass kext internal permission check | Progressed to next error |
+| 3 | APFeatures: 1→15 | Enable AWDL/AirDrop/AirPlay flags | awdl0 interface active but protocol inactive |
+| 4 | VirtualInterface type check bypass | Allow awdl0 virtual interface UserClient | Partial progress |
+| 5 | VirtualInterface entitlement check bypass | Bypass virtual interface permission check | Partial progress |
+| 6 | kext class name AsyncEvent→API | Fix airportd MACF matching | airportd passes but rapportd etc. blocked |
+
+**Conclusion**: AWDL cannot be fully activated under OCLP-Mod hackintosh architecture. This is an architectural limitation. AirDrop (between Apple devices) is not available.
+
+> **Note**: Bluetooth file transfer (sending to Android and other Bluetooth devices) works normally and is unaffected.
 
 ### Enabled Kexts
 
@@ -339,16 +332,16 @@ AirDrop bidirectional discovery incomplete
 
 ### WiFi/Bluetooth
 
-BCM94360Z4 is a native Apple-compatible card. The following kexts are **NOT** needed (absent from EFI):
-- AirportBrcmFixup
-- BluetoothFixup
-- BlueToolFixup
-- BrcmFirmwareData
-- BrcmPatchRAM3
+BCM94360Z4 is a native Apple-compatible card. WiFi uses `IO80211FamilyLegacy + AirPort_BrcmNIC` native driver with OCLP-Mod 2.6.9 Root Patch (note: 3.x versions are unstable on Sequoia, use 2.6.9 only).
 
-WiFi uses `IO80211FamilyLegacy + AirPort_BrcmNIC` native driver with OCLP-Mod 2.6.9 Root Patch (note: 3.x versions are unstable on Sequoia, use 2.6.9 only).
+Bluetooth works via UTBMap's **HS14 (port 14) internal port mapping**. BCM94360Z4's Bluetooth connects via USB to the XHCI controller's internal port. UTBMap marks this port as `UsbConnector=255` (internal device), allowing macOS to enumerate the Bluetooth device. Bluetooth uses **USB transport** (not UART), with normal Address and firmware version.
 
-Bluetooth works via UTBMap's **HS11 (port 11) and HS14 (port 14) internal port mapping**. BCM94360Z4's Bluetooth connects via USB to the XHCI controller's internal ports. UTBMap marks these as `UsbConnector=255` (internal device), allowing macOS to enumerate the Bluetooth device. Bluetooth uses **USB transport** (not UART), with normal Address and firmware version.
+Current Bluetooth status:
+- Bluetooth connection and file transfer work normally (can search and connect to non-Apple devices)
+- **Cannot discover Apple devices** (e.g., iPhone, iPad) — this is an OCLP-Mod architectural limitation
+- AirDrop (between Apple devices) does not work (AWDL protocol cannot be activated, see section above)
+
+> **Note**: EFI includes AirportBrcmFixup (2.2.0) + brcmfx-country=US to fix WiFi country code. BrcmPatchRAM3 + BlueToolFixup + BrcmFirmwareData are used for Bluetooth firmware loading.
 
 > **Important**: Previous attempts using SSDT-BT (injecting _DSM via UBTC ACPI) failed three times — UBTC is actually a USB Type-C UCSI controller (`_HID=USBC000`), not a Bluetooth device, and already has its own _DSM method. The correct fix is UTBMap port mapping, not SSDT injection.
 
@@ -391,25 +384,28 @@ SSDT-TPM-Off, SSDT-AWAC-HPET-RTC, SSDT-PLUG, SSDT-PMCR, SSDT-PPMC, SSDT-MCHC, SS
 
 ## What Works
 
-- macOS Sequoia boot and installation
+- macOS Sequoia 15.7.8 boot and installation
 - Intel UHD 630 display output (HDMI)
+- Headless boot (physical HDMI dummy plug, confirmed working)
 - Intel I219 Ethernet
 - WiFi (BCM94360Z4 native driver + OCLP-Mod 2.6.9)
-- Bluetooth (BCM94360Z4, UTBMap HS11/HS14 internal port mapping, USB transport, Address/Firmware normal)
-- USB ports (UTBMap custom mapping, including internal Bluetooth ports)
+- Bluetooth (BCM94360Z4, UTBMap HS14 internal port mapping, USB transport, Address/Firmware normal)
+- Bluetooth file transfer (can connect to non-Apple devices, e.g., Android phones)
+- USB ports (UTBMap custom mapping, including internal Bluetooth port)
 - CPU power management
 
 ## What Needs Work
 
 - Audio (may need layout-id adjustment)
 - iCloud / iMessage (need to generate unique SMBIOS serials with GenSMBIOS)
-- Headless boot (requires physical HDMI dummy plug — purchased, pending testing)
+- AirDrop (AWDL architectural limitation, see section above)
+- Bluetooth discovery of Apple devices (OCLP-Mod architectural limitation)
 
 ## Important Notes
 
 1. **SMBIOS Serials**: The serials in this config are placeholder values. You MUST generate your own using [GenSMBIOS](https://github.com/corpnewt/GenSMBIOS) for Macmini8,1 before using iCloud/iMessage.
 
-2. **Headless Boot**: EDID injection (`AAPL00,override-no-connect`) does NOT work for headless boot. The issue is at the UEFI GOP phase, not macOS. iGPU must detect a display device during POST to initialize. The solution is a physical HDMI dummy plug (inserted into HDMI port) — once boot completes, removing the dummy plug doesn't affect usage.
+2. **Headless Boot**: EDID injection (`AAPL00,override-no-connect`) does NOT work for headless boot. The issue is at the UEFI GOP phase, not macOS. iGPU must detect a display device during POST to initialize. The solution is a physical HDMI dummy plug (inserted into HDMI port) — once boot completes, removing the dummy plug doesn't affect usage. **HDMI dummy plug confirmed working**.
 
 3. **Display Output**: This machine has 2x DisplayPort on rear. The framebuffer patch maps 3 HDMI connectors (type=0x0008) with busid 1/2/4. If only one port has signal, adjust the framebuffer busid values.
 
