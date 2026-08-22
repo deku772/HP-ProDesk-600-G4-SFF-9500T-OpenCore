@@ -6,3 +6,4 @@ EFI/OC/config-verbose.plist
 EFI/OC/config.plist.backup.*
 EFI/OC/config.plist.bak.*
 EFI/OC/oldConfig.plist
+EFI/OC/config.plist.bak*
