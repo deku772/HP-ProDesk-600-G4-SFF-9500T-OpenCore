@@ -1,7 +1,19 @@
+---
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: '86908e68-33fc-4f6e-8251-57d4c0f4c285'
+  PropagateID: '86908e68-33fc-4f6e-8251-57d4c0f4c285'
+  ReservedCode1: '01cf1973-9832-4a9f-9c3f-3263fca1c581'
+  ReservedCode2: '01cf1973-9832-4a9f-9c3f-3263fca1c581'
+---
 
 # HP ProDesk 600 G4 SFF - OpenCore EFI
 
-适用于 **惠普 ProDesk 600 G4 SFF**（i5-9500T）的 OpenCore EFI，运行 macOS Sequoia 15.7.8。
+适用于 **惠普 ProDesk 600 G4 SFF**（i5-9500T）的 OpenCore EFI，**跨 macOS 版本通用**（Ventura 13 / Sequoia 15 / Tahoe 26），当前运行 macOS Sequoia 15.7.8。
+
+> **跨版本兼容**：通过 OCLP kext 的 `MinKernel=23.0.0` 门禁，同一份 EFI 可在 macOS 13-26 上启动——Ventura 13 使用系统原生 WiFi 免驱，Sequoia/Tahoe 使用 OCLP kext 驱动 BCM94360Z4。
 
 ---
 
@@ -21,10 +33,7 @@
 
 **OpenCore 1.0.7**（2025年3月20日发布）
 
-## macOS 兼容性
 
-- macOS Sequoia 15.7.8 (Build 24G814)（已测试）
-- macOS Sequoia 15.7.7 (Build 24G720)（此前版本，已升级）
 
 ## SMBIOS
 
@@ -47,12 +56,12 @@
 ### 启动参数
 
 ```
-keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall amfi=0x80 brcmfx-country=US io80211.awdl=1
+keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall brcmfx-country=US
 ```
 
-> 注：`amfi=0x80` 于 2026-07-21 添加，配合 AMFIPass.kext 在 SIP 0x0803 下放宽 AMFI 限制，保障 OpenCore kext 注入。参考 5T33Z0/OCLP4Hackintosh WiFi_Sonoma 指南。
+> 注：`brcmfx-country=US` 于 2026-07-22 添加，用于修复 WiFi country code。`io80211.awdl=1` 曾于同一天添加尝试启用 AWDL，因 AWDL 无法激活已移除（详见下方 AirDrop 章节）。
 >
-> 注：`brcmfx-country=US` 和 `io80211.awdl=1` 于 2026-07-22 添加，用于修复 WiFi country code 和尝试启用 AWDL。AWDL 最终未能激活（详见下方 AirDrop 章节）。
+> 注：`amfi=0x80` 曾于 2026-07-21 添加（配合 AMFIPass.kext 在 SIP 0x0803 下放宽 AMFI 限制），但它在 macOS Ventura 13 上会导致系统卷校验失败出现禁止符号，已于 2026-08-22 移除。AMFIPass.kext 现通过 `MinKernel=23.0.0` 门禁仅用于 macOS 14+（Sequoia/Tahoe）。
 
 ### SIP 配置
 
@@ -99,6 +108,8 @@ AirDrop 需要 AWDL（Apple Wireless Direct Link）协议在 WiFi 数据链路�
 > **注意**：蓝牙文件传输（发送给安卓等其他蓝牙设备）正常工作，不受影响。
 
 ### 启用的 Kext
+
+> **跨版本门禁**：OCLP 相关 kext（AMFIPass、IOSkywalkFamily、IO80211FamilyLegacy、AirPortBrcmNIC）均设置 `MinKernel=23.0.0`，仅在 macOS 14+ 加载；Ventura 13 下 BCM94360Z4 由系统原生驱动，无需 OCLP kext。
 
 | Kext | 版本 | 用途 |
 |---|---|---|
@@ -171,6 +182,7 @@ SSDT-TPM-Off、SSDT-AWAC-HPET-RTC、SSDT-PLUG、SSDT-PMCR、SSDT-PPMC、SSDT-MCH
 
 ## 正常工作的功能
 
+- macOS Ventura 13 启动（已验证，无禁止符号）
 - macOS Sequoia 15.7.8 启动和安装
 - Intel UHD 630 显示输出（HDMI）
 - 无显示器启动（物理 HDMI 诱骗器，已确认正常工作）
@@ -214,7 +226,7 @@ SSDT-TPM-Off、SSDT-AWAC-HPET-RTC、SSDT-PLUG、SSDT-PMCR、SSDT-PPMC、SSDT-MCH
 
 # HP ProDesk 600 G4 SFF - OpenCore EFI (English)
 
-OpenCore EFI for **HP ProDesk 600 G4 SFF** with **Intel Core i5-9500T**, running macOS Sequoia 15.7.8.
+OpenCore EFI for **HP ProDesk 600 G4 SFF** with **Intel Core i5-9500T**, compatible across macOS Ventura 13 / Sequoia 15 / Tahoe 26, currently running macOS Sequoia 15.7.8.
 
 ---
 
@@ -236,8 +248,10 @@ OpenCore EFI for **HP ProDesk 600 G4 SFF** with **Intel Core i5-9500T**, running
 
 ## macOS Compatibility
 
+- macOS Ventura 13 (tested, verified boot, no prohibition sign)
 - macOS Sequoia 15.7.8 (Build 24G814) (tested)
 - macOS Sequoia 15.7.7 (Build 24G720) (previous version, upgraded)
+- macOS Tahoe 26 (theoretical; OCLP kexts gated with MinKernel=23.0.0)
 
 ## SMBIOS
 
@@ -260,12 +274,12 @@ If you need to boot without a display (e.g., for remote control), you **must use
 ### Boot Arguments
 
 ```
-keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall amfi=0x80 brcmfx-country=US io80211.awdl=1
+keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall brcmfx-country=US
 ```
 
-> Note: `amfi=0x80` added 2026-07-21 to relax AMFI alongside AMFIPass.kext under SIP 0x0803, ensuring OpenCore kext injection. Per 5T33Z0/OCLP4Hackintosh WiFi_Sonoma guide.
+> Note: `brcmfx-country=US` added 2026-07-22 to fix WiFi country code. `io80211.awdl=1` was added the same day to attempt AWDL activation but was removed because AWDL cannot activate (see AirDrop section below).
 >
-> Note: `brcmfx-country=US` and `io80211.awdl=1` added 2026-07-22 to fix WiFi country code and attempt AWDL activation. AWDL ultimately failed to activate (see AirDrop section below).
+> Note: `amfi=0x80` was added 2026-07-21 to relax AMFI alongside AMFIPass.kext under SIP 0x0803, but it causes a boot volume verification failure (prohibition sign) on macOS Ventura 13, so it was removed 2026-08-22. AMFIPass.kext is now gated with `MinKernel=23.0.0` for macOS 14+ only (Sequoia/Tahoe).
 
 ### SIP Configuration
 
@@ -384,6 +398,7 @@ SSDT-TPM-Off, SSDT-AWAC-HPET-RTC, SSDT-PLUG, SSDT-PMCR, SSDT-PPMC, SSDT-MCHC, SS
 
 ## What Works
 
+- macOS Ventura 13 boot (verified, no prohibition sign)
 - macOS Sequoia 15.7.8 boot and installation
 - Intel UHD 630 display output (HDMI)
 - Headless boot (physical HDMI dummy plug, confirmed working)
@@ -422,3 +437,5 @@ SSDT-TPM-Off, SSDT-AWAC-HPET-RTC, SSDT-PLUG, SSDT-PMCR, SSDT-PPMC, SSDT-MCHC, SS
 - [Acidanthera](https://github.com/acidanthera) - OpenCore, Lilu, VirtualSMC, WhateverGreen, AppleALC, and more
 - [Mieze](https://github.com/Mieze) - IntelMausiEthernet
 - [Dortania](https://dortania.github.io) - OpenCore Install Guide
+
+> AI生成
