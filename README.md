@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '86908e68-33fc-4f6e-8251-57d4c0f4c285'
-  PropagateID: '86908e68-33fc-4f6e-8251-57d4c0f4c285'
-  ReservedCode1: '01cf1973-9832-4a9f-9c3f-3263fca1c581'
-  ReservedCode2: '01cf1973-9832-4a9f-9c3f-3263fca1c581'
+  ProduceID: 'd4ace08c-ac1c-4603-a9c2-d7a01e15dd28'
+  PropagateID: 'd4ace08c-ac1c-4603-a9c2-d7a01e15dd28'
+  ReservedCode1: 'ed55d836-d2b5-43df-9f8c-a8a199015af8'
+  ReservedCode2: 'ed55d836-d2b5-43df-9f8c-a8a199015af8'
 ---
 
 # HP ProDesk 600 G4 SFF - OpenCore EFI
@@ -14,6 +14,15 @@ AIGC:
 适用于 **惠普 ProDesk 600 G4 SFF**（i5-9500T）的 OpenCore EFI，**跨 macOS 版本通用**（Ventura 13 / Sequoia 15 / Tahoe 26），当前运行 macOS Sequoia 15.7.8。
 
 > **跨版本兼容**：通过 OCLP kext 的 `MinKernel=23.0.0` 门禁，同一份 EFI 可在 macOS 13-26 上启动——Ventura 13 使用系统原生 WiFi 免驱，Sequoia/Tahoe 使用 OCLP kext 驱动 BCM94360Z4。
+
+## 快速开始（U 盘引导）
+
+1. 下载本仓库 ZIP 并解压
+2. 将解压后的 **`EFI/` 文件夹整体复制**到 U 盘根目录（U 盘需 FAT32 格式）
+3. 最终 U 盘结构：`U:\EFI\BOOT\BOOTx64.efi` + `U:\EFI\OC\config.plist`
+4. BIOS 启动项选择 **UEFI: U盘**，即可进入 OpenCore 引导菜单
+
+> **注意**：请直接使用仓库根目录的 `EFI/` 文件夹，不要自己手动拼接 `OC/` 和 `BOOT/`，避免遗漏文件导致无法引导。
 
 ---
 
@@ -227,6 +236,15 @@ SSDT-TPM-Off、SSDT-AWAC-HPET-RTC、SSDT-PLUG、SSDT-PMCR、SSDT-PPMC、SSDT-MCH
 # HP ProDesk 600 G4 SFF - OpenCore EFI (English)
 
 OpenCore EFI for **HP ProDesk 600 G4 SFF** with **Intel Core i5-9500T**, compatible across macOS Ventura 13 / Sequoia 15 / Tahoe 26, currently running macOS Sequoia 15.7.8.
+
+## Quick Start (USB Boot)
+
+1. Download and extract this repository ZIP
+2. Copy the entire **`EFI/` folder** to the root of your USB drive (USB must be FAT32)
+3. Final USB structure: `U:\EFI\BOOT\BOOTx64.efi` + `U:\EFI\OC\config.plist`
+4. Select **UEFI: USB drive** in BIOS to enter the OpenCore picker
+
+> **Note**: Use the `EFI/` folder from the repo root directly. Do not manually assemble `OC/` and `BOOT/` to avoid missing files and boot failure.
 
 ---
 
