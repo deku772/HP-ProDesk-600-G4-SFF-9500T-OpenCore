@@ -1,11 +1,4 @@
 .DS_Store
-OC/.DS_Store
-OC/ACPI/.DS_Store
-OC/Kexts/.DS_Store
-OC/config-verbose.plist
-OC/config.plist.backup.*
-OC/config.plist.bak.*
-OC/oldConfig.plist
 EFI/OC/.DS_Store
 EFI/OC/ACPI/.DS_Store
 EFI/OC/Kexts/.DS_Store
