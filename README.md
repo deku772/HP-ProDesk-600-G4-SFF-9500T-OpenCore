@@ -57,7 +57,7 @@ AIGC:
 
 ## OpenCore 版本
 
-**OpenCore 1.0.6**（基于 OC1.0.6 基线模板）
+**OpenCore 1.0.8**（基于 Dortania build-repo 提交 558a2fd 构建；OC 核心文件与 config 均通过 ocvalidate 1.0.8 校验零错误）
 
 
 
