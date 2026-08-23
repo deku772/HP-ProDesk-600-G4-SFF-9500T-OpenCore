@@ -11,9 +11,26 @@ AIGC:
 
 # HP ProDesk 600 G4 SFF - OpenCore EFI
 
-适用于 **惠普 ProDesk 600 G4 SFF**（i5-9500T）的 OpenCore EFI，**跨 macOS 版本通用**（Ventura 13 / Sequoia 15 / Tahoe 26），当前运行 macOS Sequoia 15.7.8。
+适用于 **惠普 ProDesk 600 G4 SFF**（i5-9500T）的 OpenCore EFI，**实测双版本可用**：**macOS Ventura 13.7.8** ✅ 与 **Sequoia 15** ✅；Tahoe 26 理论可行（OCLP kext 已预留 `MinKernel=23.0.0` 门禁）但未实测。
 
 > **跨版本兼容**：通过 OCLP kext 的 `MinKernel=23.0.0` 门禁，同一份 EFI 可在 macOS 13-26 上启动——Ventura 13 使用系统原生 WiFi 免驱，Sequoia/Tahoe 使用 OCLP kext 驱动 BCM94360Z4。
+
+## 相比 HP ProDesk 600 G4 DM 通用配置的优势
+
+本仓库针对 **SFF 立式机型**深度定制，而非直接套用 DM（Desktop Mini）通用 EFI。两者同属 600 G4 系列，但机箱与主板布局不同——把 DM 配置用在 SFF 上会引出 USB 端口错位、RTC BIOS 重置等隐患。
+
+| 维度 | DM 通用配置（多数公开仓库） | 本仓库（SFF 专属） |
+|---|---|---|
+| 目标机型 | DM 迷你主机 | **SFF 立式**（面板/主板布局不同） |
+| USB 映射 | USBPorts.kext（DM 端口布局） | **USBToolBox + UTBMap**（按 SFF 实测定制，含内部蓝牙端口） |
+| RTC 保护 | `rtcfx_exclude=58-59,B0-B3,D0-DF`（DM 偏移） | **`rtcfx_exclude=80-AB`**（SFF 主板偏移，抄错会触发 BIOS 重置） |
+| 博通 WiFi | AirportBrcmFixup + BrcmFirmwareData 老式组合 | **IOSkywalk + IO80211FamilyLegacy + AMFIPass**（OCLP 现代方案，Sequoia 原生驱动） |
+| 第三方 NVMe | 多数未处理 | **NVMeFix 1.1.3 已装并实测根治低功耗挂死**（曾因 J.ZAO 盘 watchdog panic，根治后稳定） |
+| SSDT 集 | 4 个（PLUG/EC-USBX/AWAC/PMC） | **14 个**（含 TPM-Off、HPET-RTC、XOSI、WAK/PTS 睡眠唤醒等） |
+| 蓝牙 | DW1820A 蓝牙仍不可用（待查 USB） | **BCM94360Z4 原生卡，WiFi+BT 完整**（UTBMap HS14 内部端口） |
+| 跨版本 | 通常单版本 | **Ventura 13 ✅ + Sequoia 15 ✅**（OCLP kext `MinKernel=23.0.0` 门禁） |
+
+> 结论：DM 通用配置在 SFF 上属于“能用但隐患多”，本仓库是**针对 SFF 调通的成品**。
 
 ## 快速开始（U 盘引导）
 
@@ -40,7 +57,7 @@ AIGC:
 
 ## OpenCore 版本
 
-**OpenCore 1.0.7**（2025年3月20日发布）
+**OpenCore 1.0.6**（基于 OC1.0.6 基线模板）
 
 
 
@@ -65,10 +82,10 @@ AIGC:
 ### 启动参数
 
 ```
-keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall brcmfx-country=US
+keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall brcmfx-country=US igfxfw=2
 ```
 
-> 注：`brcmfx-country=US` 于 2026-07-22 添加，用于修复 WiFi country code。`io80211.awdl=1` 曾于同一天添加尝试启用 AWDL，因 AWDL 无法激活已移除（详见下方 AirDrop 章节）。
+> 注：`igfxfw=2` 于 2026-08-22 添加，让 WhateverGreen 为 UHD 630 加载 Apple GuC 固件（核显微码），提升高负载稳定性。`brcmfx-country=US` 于 2026-07-22 添加，用于修复 WiFi country code。`io80211.awdl=1` 曾于同一天添加尝试启用 AWDL，因 AWDL 无法激活已移除（详见下方 AirDrop 章节）。
 >
 > 注：`amfi=0x80` 曾于 2026-07-21 添加（配合 AMFIPass.kext 在 SIP 0x0803 下放宽 AMFI 限制），但它在 macOS Ventura 13 上会导致系统卷校验失败出现禁止符号，已于 2026-08-22 移除。AMFIPass.kext 现通过 `MinKernel=23.0.0` 门禁仅用于 macOS 14+（Sequoia/Tahoe）。
 
@@ -211,7 +228,7 @@ SSDT-TPM-Off、SSDT-AWAC-HPET-RTC、SSDT-PLUG、SSDT-PMCR、SSDT-PPMC、SSDT-MCH
 
 ## 注意事项
 
-1. **SMBIOS 序列号**：配置中的序列号为占位符，使用 iCloud/iMessage 前必须用 [GenSMBIOS](https://github.com/corpnewt/GenSMBIOS) 为 Macmini8,1 生成你自己的序列号。
+1. **SMBIOS 序列号**：配置中已内置**随机生成的合法三码**（Macmini8,1），下载即可直接用；如需 iCloud/iMessage 服务，建议用 [GenSMBIOS](https://github.com/corpnewt/GenSMBIOS) 为 Macmini8,1 重新生成专属三码。
 
 2. **无显示器启动**：EDID 注入（`AAPL00,override-no-connect`）对无显示器启动**无效**。问题在 UEFI GOP 阶段而非 macOS，iGPU 必须在开机自检时检测到显示设备才初始化。解决方案是使用物理 HDMI 诱骗器（插入 HDMI 口），让 GOP 认为"有显示器"。启动完成后拔掉诱骗器也不影响使用。**已确认 HDMI 诱骗器正常工作**。
 
@@ -235,7 +252,24 @@ SSDT-TPM-Off、SSDT-AWAC-HPET-RTC、SSDT-PLUG、SSDT-PMCR、SSDT-PPMC、SSDT-MCH
 
 # HP ProDesk 600 G4 SFF - OpenCore EFI (English)
 
-OpenCore EFI for **HP ProDesk 600 G4 SFF** with **Intel Core i5-9500T**, compatible across macOS Ventura 13 / Sequoia 15 / Tahoe 26, currently running macOS Sequoia 15.7.8.
+OpenCore EFI for **HP ProDesk 600 G4 SFF** with **Intel Core i5-9500T**, verified working on **macOS Ventura 13.7.8** ✅ and **Sequoia 15** ✅; Tahoe 26 is theoretically possible (OCLP kexts gated with MinKernel=23.0.0) but untested.
+
+## Why this is better than generic DM configs
+
+This repo is tailored for the **SFF (Small Form Factor) tower**, not a generic DM (Desktop Mini) EFI. Both are 600 G4 family but differ in chassis/mainboard layout — using a DM config on SFF causes USB/RTC issues.
+
+| Aspect | Generic DM config | This repo (SFF) |
+|---|---|---|
+| Target | DM mini | **SFF tower** (different layout) |
+| USB map | USBPorts.kext (DM layout) | **USBToolBox + UTBMap** (SFF-tuned, incl. internal BT port) |
+| RTC guard | rtcfx_exclude=58-59,B0-B3,D0-DF (DM) | **rtcfx_exclude=80-AB** (SFF board) |
+| Broadcom WiFi | AirportBrcmFixup + BrcmFirmwareData (legacy) | **IOSkywalk + IO80211FamilyLegacy + AMFIPass** (OCLP, Sequoia native) |
+| 3rd-party NVMe | often unhandled | **NVMeFix 1.1.3 installed, fixed low-power hang** (was watchdog panic, now stable) |
+| SSDT set | 4 (PLUG/EC-USBX/AWAC/PMC) | **14** (TPM-Off, HPET-RTC, XOSI, WAK/PTS sleep-wake, etc.) |
+| Bluetooth | DW1820A BT unusable | **BCM94360Z4 native, WiFi+BT full** |
+| Cross-version | usually single | **Ventura 13 ✅ + Sequoia 15 ✅** |
+
+---
 
 ## Quick Start (USB Boot)
 
@@ -262,7 +296,7 @@ OpenCore EFI for **HP ProDesk 600 G4 SFF** with **Intel Core i5-9500T**, compati
 
 ## OpenCore Version
 
-**OpenCore 1.0.7** (released March 20, 2025)
+**OpenCore 1.0.6** (based on OC1.0.6 baseline template)
 
 ## macOS Compatibility
 
@@ -292,10 +326,10 @@ If you need to boot without a display (e.g., for remote control), you **must use
 ### Boot Arguments
 
 ```
-keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall brcmfx-country=US
+keepsyms=1 debug=0x100 rtcfx_exclude=80-AB darkwake=2 igfxonln=1 igfxagdc=0 e1000=1 -lilubetaall brcmfx-country=US igfxfw=2
 ```
 
-> Note: `brcmfx-country=US` added 2026-07-22 to fix WiFi country code. `io80211.awdl=1` was added the same day to attempt AWDL activation but was removed because AWDL cannot activate (see AirDrop section below).
+> Note: `igfxfw=2` added 2026-08-22 to let WhateverGreen load Apple GuC firmware for UHD 630. `brcmfx-country=US` added 2026-07-22 to fix WiFi country code. `io80211.awdl=1` was added the same day to attempt AWDL activation but was removed because AWDL cannot activate (see AirDrop section below).
 >
 > Note: `amfi=0x80` was added 2026-07-21 to relax AMFI alongside AMFIPass.kext under SIP 0x0803, but it causes a boot volume verification failure (prohibition sign) on macOS Ventura 13, so it was removed 2026-08-22. AMFIPass.kext is now gated with `MinKernel=23.0.0` for macOS 14+ only (Sequoia/Tahoe).
 
@@ -436,7 +470,7 @@ SSDT-TPM-Off, SSDT-AWAC-HPET-RTC, SSDT-PLUG, SSDT-PMCR, SSDT-PPMC, SSDT-MCHC, SS
 
 ## Important Notes
 
-1. **SMBIOS Serials**: The serials in this config are placeholder values. You MUST generate your own using [GenSMBIOS](https://github.com/corpnewt/GenSMBIOS) for Macmini8,1 before using iCloud/iMessage.
+1. **SMBIOS Serials**: The config ships with **randomly generated but valid SMBIOS triplets** (Macmini8,1) — ready to use out of the box. For iCloud/iMessage, regenerate your own with [GenSMBIOS](https://github.com/corpnewt/GenSMBIOS) for Macmini8,1.
 
 2. **Headless Boot**: EDID injection (`AAPL00,override-no-connect`) does NOT work for headless boot. The issue is at the UEFI GOP phase, not macOS. iGPU must detect a display device during POST to initialize. The solution is a physical HDMI dummy plug (inserted into HDMI port) — once boot completes, removing the dummy plug doesn't affect usage. **HDMI dummy plug confirmed working**.
 
